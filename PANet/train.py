@@ -31,13 +31,13 @@ def main(_run, _config, _log):
     set_seed(_config['seed'])
     cudnn.enabled = True
     cudnn.benchmark = True
-    torch.cuda.set_device(device=_config['gpu_id'])
+    # torch.cuda.set_device(device=_config['gpu_id'])
     torch.set_num_threads(1)
 
 
     _log.info('###### Create model ######')
     model = FewShotSeg(pretrained_path=_config['path']['init_path'], cfg=_config['model'])
-    model = nn.DataParallel(model.cuda(), device_ids=[_config['gpu_id'],])
+    # model = nn.DataParallel(model, device_ids=[_config['gpu_id'],])
     model.train()
 
 
@@ -82,17 +82,17 @@ def main(_run, _config, _log):
     _log.info('###### Training ######')
     for i_iter, sample_batched in enumerate(trainloader):
         # Prepare input
-        support_images = [[shot.cuda() for shot in way]
+        support_images = [[shot for shot in way]
                           for way in sample_batched['support_images']]
-        support_fg_mask = [[shot[f'fg_mask'].float().cuda() for shot in way]
+        support_fg_mask = [[shot[f'fg_mask'].float() for shot in way]
                            for way in sample_batched['support_mask']]
-        support_bg_mask = [[shot[f'bg_mask'].float().cuda() for shot in way]
+        support_bg_mask = [[shot[f'bg_mask'].float() for shot in way]
                            for way in sample_batched['support_mask']]
 
-        query_images = [query_image.cuda()
+        query_images = [query_image
                         for query_image in sample_batched['query_images']]
         query_labels = torch.cat(
-            [query_label.long().cuda() for query_label in sample_batched['query_labels']], dim=0)
+            [query_label.long() for query_label in sample_batched['query_labels']], dim=0)
 
         # Forward and Backward
         optimizer.zero_grad()

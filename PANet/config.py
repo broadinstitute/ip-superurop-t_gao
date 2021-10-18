@@ -30,17 +30,21 @@ def cfg():
     gpu_id = 0
     mode = 'test' # 'train' or 'test'
 
+    notrain = False
+    bbox = False
+    scribble = False
 
-    if mode == 'train':
+
+    if True: # if mode == 'train':
         dataset = 'VOC'  # 'VOC' or 'COCO'
-        n_steps = 30000
+        n_steps = 50
         label_sets = 0
         batch_size = 1
-        lr_milestones = [10000, 20000, 30000]
+        lr_milestones = [10, 20, 30]
         align_loss_scaler = 1
         ignore_label = 255
-        print_interval = 100
-        save_pred_every = 10000
+        print_interval = 1
+        save_pred_every = 10
 
         model = {
             'align': True,
@@ -53,46 +57,46 @@ def cfg():
         }
 
         optim = {
-            'lr': 1e-3,
-            'momentum': 0.9,
+            'lr': 1e-1,
+            'momentum': 0.75,
             'weight_decay': 0.0005,
         }
 
-    elif mode == 'test':
-        notrain = False
-        snapshot = './runs/PANet_VOC_sets_0_1way_1shot_[train]/1/snapshots/30000.pth'
-        n_runs = 5
-        n_steps = 1000
-        batch_size = 1
-        scribble_dilation = 0
-        bbox = False
-        scribble = False
+    # elif mode == 'test':
+    #     notrain = False
+    #     snapshot = './runs/PANet_VOC_sets_0_1way_1shot_[train]/1/snapshots/30000.pth'
+    #     n_runs = 5
+    #     n_steps = 1000
+    #     batch_size = 1
+    #     scribble_dilation = 0
+    #     bbox = False
+    #     scribble = False
 
-        # Set dataset config from the snapshot string
-        if 'VOC' in snapshot:
-            dataset = 'VOC'
-        elif 'COCO' in snapshot:
-            dataset = 'COCO'
-        else:
-            raise ValueError('Wrong snapshot name !')
+    #     # Set dataset config from the snapshot string
+    #     if 'VOC' in snapshot:
+    #         dataset = 'VOC'
+    #     elif 'COCO' in snapshot:
+    #         dataset = 'COCO'
+    #     else:
+    #         raise ValueError('Wrong snapshot name !')
 
-        # Set model config from the snapshot string
-        model = {}
-        for key in ['align',]:
-            model[key] = key in snapshot
+    #     # Set model config from the snapshot string
+    #     model = {}
+    #     for key in ['align',]:
+    #         model[key] = key in snapshot
 
-        # Set label_sets from the snapshot string
-        label_sets = int(snapshot.split('_sets_')[1][0])
+    #     # Set label_sets from the snapshot string
+    #     label_sets = int(snapshot.split('_sets_')[1][0])
 
-        # Set task config from the snapshot string
-        task = {
-            'n_ways': int(re.search("[0-9]+way", snapshot).group(0)[:-3]),
-            'n_shots': int(re.search("[0-9]+shot", snapshot).group(0)[:-4]),
-            'n_queries': 1,
-        }
+    #     # Set task config from the snapshot string
+    #     task = {
+    #         'n_ways': int(re.search("[0-9]+way", snapshot).group(0)[:-3]),
+    #         'n_shots': int(re.search("[0-9]+shot", snapshot).group(0)[:-4]),
+    #         'n_queries': 1,
+    #     }
 
-    else:
-        raise ValueError('Wrong configuration for "mode" !')
+    # else:
+    #     raise ValueError('Wrong configuration for "mode" !')
 
 
     exp_str = '_'.join(
