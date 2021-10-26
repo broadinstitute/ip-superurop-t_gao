@@ -5,7 +5,7 @@ from PIL import Image
 
 print('entered chth-test.py')
 
-im = Image.open('midbody/ENSG00000134152_U-2-OS_1345_E8_1_blue_red_green.jpg')
+im = Image.open('../../../midbody/ENSG00000134152_U-2-OS_1345_E8_1_blue_red_green.jpg')
 im_array = np.array(im)
 print('\nim_array')
 print(im_array)
