@@ -1,2 +1,4 @@
 .DS_Store
 data/
+repos/PANet/runs/
+repos/PANet/pretrained_model/
