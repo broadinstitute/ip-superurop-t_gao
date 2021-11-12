@@ -9,7 +9,7 @@ from tensorflow.keras import datasets, layers, models, losses
 
 # set parameters
 seed = 123
-image_dir = '/Volumes/imaging_analysis/2021_10_06_HumanProteinAtlas_CiminiLab_TeresaGao/Greyscale_Images/' # on local computer, must be connected to smb://hydrogen/imaging_analysis server on Broad Institute IP group VPN
+image_dir = '../../../Greyscale_Images/'
 img_height = 2048
 img_width = 2048
 alexnet_layers = [
