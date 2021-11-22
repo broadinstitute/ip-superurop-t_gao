@@ -6,7 +6,7 @@
 #  your job. Wherever you see $(Cluster), HTCondor will insert the
 #  queue number assigned to this set of jobs at the time of submission.
 universe = docker
-docker_image = teresahgao/alexnet
+docker_image = teresahgao/superurop-grayscale-cnn
 log = outputs/alexnet_$(Cluster).log
 #
 # Specify your executable (single binary or a script that runs several
@@ -30,7 +30,7 @@ transfer_input_files = main.py,../../../Greyscale_Images/
 #  each job will need on the computer where it runs.
 request_cpus = 1
 request_memory = 1GB
-request_disk = 1GB
+request_disk = 5GB
 #
 # Tell HTCondor to run 3 instances of our job:
 # queue 3
