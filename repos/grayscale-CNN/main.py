@@ -12,36 +12,6 @@ seed = 123
 image_dir = '../../../Greyscale_Images/'
 img_height = 2048
 img_width = 2048
-alexnet_layers = [
-    layers.experimental.preprocessing.Resizing(224, 224, interpolation="bilinear", input_shape=x_train.shape[1:])
-
-    layers.Conv2D(96, 11, strides=4, padding='same')
-    layers.Lambda(tf.nn.local_response_normalization)
-    layers.Activation('relu')
-    layers.MaxPooling2D(3, strides=2)
-
-    layers.Conv2D(384, 3, strides=4, padding='same')
-    layers.Activation('relu')
-
-    layers.Conv2D(384, 3, strides=4, padding='same')
-    layers.Activation('relu')
-
-    layers.Flatten()
-    layers.Dense(4096, activation='relu')
-    layers.Dropout(0.5)
-
-    layers.Dense(10, activation='softmax')
-]
-
-def build_model(layers, print_summary=False):
-    model = models.Sequential()
-    for layer in layers:
-        model.add(layer)
-
-    if print_summary:
-        print(alexnet.summary())
-
-    return model
 
 if __name__ == '__main__':
     # load datasets
@@ -62,7 +32,29 @@ if __name__ == '__main__':
     )
 
     # build AlexNet CNN
-    alexnet = build_model(alexnet_layers, print_summary=True)
+    model = models.Sequential()
+    model.add(layers.experimental.preprocessing.Resizing(224, 224, interpolation="bilinear", input_shape=x_train.shape[1:]))
+    model.add(layers.Conv2D(96, 11, strides=4, padding='same'))
+    model.add(layers.Lambda(tf.nn.local_response_normalization))
+    model.add(layers.Activation('relu'))
+    model.add(layers.MaxPooling2D(3, strides=2))
+    model.add(layers.Conv2D(256, 5, strides=4, padding='same'))
+    model.add(layers.Lambda(tf.nn.local_response_normalization))
+    model.add(layers.Activation('relu'))
+    model.add(layers.MaxPooling2D(3, strides=2))
+    model.add(layers.Conv2D(384, 3, strides=4, padding='same'))
+    model.add(layers.Activation('relu'))
+    model.add(layers.Conv2D(384, 3, strides=4, padding='same'))
+    model.add(layers.Activation('relu'))
+    model.add(layers.Conv2D(256, 3, strides=4, padding='same'))
+    model.add(layers.Activation('relu'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(4096, activation='relu'))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(4096, activation='relu'))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(10, activation='softmax'))
+    print(alexnet.summary())
     alexnet.compile(
         optimizer='adam',
         loss=losses.sparse_categorical_crossentropy,
