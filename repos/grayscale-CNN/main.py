@@ -1,35 +1,37 @@
-import pathlib
-import PIL
-import PIL.Image
+#!/usr/bin/env python
 
-import matplotlib.pyplot as plt
+import pathlib
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from tensorflow.keras import datasets, layers, models, losses
+from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 # set parameters
 seed = 123
-image_dir = '../../../Greyscale_Images/'
+image_dir = pathlib.Path('Greyscale_Images/')
 img_height = 2048
 img_width = 2048
 
 if __name__ == '__main__':
     # load datasets
-    train_ds = tf.keras.utils.image_dataset_from_directory(
-        data_dir,
+    train_ds = image_dataset_from_directory( # 20% training
+        image_dir,
         validation_split=0.2,
         subset='training',
         seed=seed,
         image_size=(img_height, img_width),
     )
-    validation_ds = tf.keras.utils.image_dataset_from_directory(
-        data_dir,
+    nontrain_ds = image_dataset_from_directory(
+        image_dir,
         validation_split=0.2,
         subset='validation',
         seed=seed,
         image_size=(img_height, img_width),
-        batch_size=batch_size
+        # batch_size=batch_size
     )
+    validation_ds = nontrain_ds.random(seed=seed).take(0.5 * tf.data.experimental.cardinality(nontrain_ds)) # 10% validation
+    test_ds = nontrain_ds.random(seed=seed).skip(0.5 * tf.data.experimental.cardinality(nontrain_ds)) # 10% testing
 
     # build AlexNet CNN
     model = models.Sequential()
@@ -72,9 +74,30 @@ if __name__ == '__main__':
     )
 
     # train model
-    alexnet.fit(
+    history = alexnet.fit(
         train_ds,
         validation_data=validation_ds,
         epochs=3,
         callbacks=[cp_callback]
     )
+
+    # plot loss and accuracy
+    fig, axs = plt.subplots(2, 1, figsize=(15,15))
+    axs[0].plot(history.history['loss'])
+    axs[0].plot(history.history['val_loss'])
+    axs[0].title.set_text('Training Loss vs Validation Loss')
+    axs[0].set_xlabel('Epochs')
+    axs[0].set_ylabel('Loss')
+    axs[0].legend(['Train', 'Val'])
+    axs[1].plot(history.history['accuracy'])
+    axs[1].plot(history.history['val_accuracy'])
+    axs[1].title.set_text('Training Accuracy vs Validation Accuracy')
+    axs[1].set_xlabel('Epochs')
+    axs[1].set_ylabel('Accuracy')
+    axs[1].legend(['Train', 'Val'])
+    plt.savefig('loss-accuracy.png', bbox_inches='tight')
+
+    # evaluate performance on test data
+    (test_loss, test_accuracy) = model.evaluate(test_ds)
+    print('test loss:', test_loss)
+    print('test accuracy:', test_accuracy)
