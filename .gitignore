@@ -4,5 +4,6 @@ repos/PANet/runs/
 repos/PANet/pretrained_model/
 repos/CHTC-test/outputs/
 repos/grayscale-CNN/Greyscale_Images/
+repos/grayscale-CNN/Greyscale_Images_png/
 repos/grayscale-CNN/outputs/
 repos/grayscale-CNN/core.*
