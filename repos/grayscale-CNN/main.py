@@ -4,6 +4,7 @@ import os
 import pathlib
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import time
 from itertools import islice
 from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses
 
@@ -14,14 +15,11 @@ img_height = 256 # TODO: reset to 2048 on CHTC!
 img_width = 256  # TODO: reset to 2048 on CHTC!
 batch_size = 1 # TODO: reset to 32 on CHTC!
 validation_split = 0.2
+epoch_count = 1 # TODO: debug iterator limitation on epoch count
 verbose = True
 
-def process(image,label):
-    image = tf.cast(image/255., tf.float32)
-    return image,label
-
 if __name__ == '__main__':
-
+    # calculate number of classes and total image count
     num_classes = len(next(os.walk(img_dir))[1])
     if verbose:
         print('-------\nnum_classes is', num_classes, '\n-------')
@@ -29,16 +27,8 @@ if __name__ == '__main__':
     if verbose:
         print('-------\nimg_count_total is', img_count_total, '\n-------')
 
-    # load datasets
-
+    # load training dataset
     datagen = preprocessing.image.ImageDataGenerator(validation_split=validation_split)
-# tf.keras.preprocessing.image.DirectoryIterator(
-#     directory, image_data_generator, target_size=(256, 256), color_mode='rgb',
-#     classes=None, class_mode='categorical', batch_size=32, shuffle=True, seed=None,
-#     data_format=None, save_to_dir=None, save_prefix='', save_format='png',
-#     follow_links=False, subset=None, interpolation='nearest', dtype=None
-# )
-
     train_ds = preprocessing.image.DirectoryIterator(
         img_dir,
         datagen,
@@ -50,6 +40,8 @@ if __name__ == '__main__':
     )
     if verbose:
         print('-------\ncreated train_ds\n-------')
+
+    # create validation and test datasets
     nontrain_ds = preprocessing.image.DirectoryIterator(
         img_dir,
         datagen,
@@ -61,49 +53,15 @@ if __name__ == '__main__':
     )
     if verbose:
         print('-------\ncreated nontrain_ds\n-------')
-
-    # nontrain_ds = tf.random.shuffle(nontrain_ds, seed=seed)
-    # if verbose:
-    #     print('-------\nshuffled nontrain_ds\n-------')
-    # train_ds = tf.random.shuffle(train_ds, seed=seed)
-    # if verbose:
-    #     print('-------\nshuffled train_ds\n-------')
-
-    #######
-
-    # train_ds = keras.preprocessing.image_dataset_from_directory( # 20% training
-    #     img_dir,
-    #     validation_split=validation_split,
-    #     subset='training',
-    #     seed=seed,
-    #     image_size=(img_height, img_width),
-    #     # batch_size=batch_size
-    # )
-    # nontrain_ds = keras.preprocessing.image_dataset_from_directory(
-    #     img_dir,
-    #     validation_split=validation_split,
-    #     subset='validation',
-    #     seed=seed,
-    #     image_size=(img_height, img_width),
-    #     # batch_size=batch_size
-    # )
-
-    # print('-------\ncardinality')
-    # print(tf.data.experimental.cardinality(nontrain_ds))
-    # print('-------')
-
-    # print(nontrain_ds.next())
-    # print(nontrain_ds.next())
-
-    img_count_validation = round(img_count_total * validation_split * 0.5)
+    img_count_nontrain = round(img_count_total * validation_split)
+    img_count_validation = round(img_count_nontrain * 0.5)
+    img_count_test = img_count_nontrain - img_count_validation
     if verbose:
         print('-------\nimg_count_validation is', img_count_validation, '\n-------')
-
     validation_ds = islice(nontrain_ds, img_count_validation) # 10% validation
-    test_ds = islice(nontrain_ds, img_count_total - img_count_validation) # 10% testing
-
+    test_ds = islice(nontrain_ds, img_count_validation) # 10% testing
     if verbose:
-        print('-------\ncreated validation_ds and test_ds\n-------')
+        print('-------\ncreated validation_ds with size', img_count_validation, 'and test_ds with size', img_count_test, '\n-------')
 
     # build AlexNet CNN
     alexnet = models.Sequential()
@@ -135,12 +93,14 @@ if __name__ == '__main__':
     )
 
     # create callback to save model
-    checkpoint_path = "models/cp.ckpt"
-    checkpoint_dir = os.path.dirname(checkpoint_path)
+    checkpoint_dir = "./models/"
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
+        if verbose:
+            print('created checkpoint_dir', checkpoint_dir)
     cp_callback = callbacks.ModelCheckpoint(
-        filepath=checkpoint_path,
+        filepath=checkpoint_dir+'checkpoint_epoch-{epoch:02d}_loss-{val_loss:.2f}.ckpt',
+        monitor='val_loss',
         verbose=1
     )
 
@@ -148,7 +108,8 @@ if __name__ == '__main__':
     history = alexnet.fit(
         train_ds,
         validation_data=validation_ds,
-        epochs=3,
+        validation_freq=1,
+        epochs=epoch_count,
         callbacks=[cp_callback]
     )
 
