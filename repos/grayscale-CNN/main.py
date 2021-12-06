@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     test_ds = None
     history = {}
-    time_as_string = datetime.now().strftime('%d-%m-%y_%H:%M:%S')
+    time_as_string = str(datetime.now().timestamp())
     for epoch_num in range(epoch_count):
         # create callback to save model
         checkpoint_dir = "./"
