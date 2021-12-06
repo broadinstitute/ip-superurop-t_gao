@@ -14,7 +14,7 @@
 
 1. Navigate to `repos/grayscale-CNN`. If `generate_png_from_tiff.py` has never been run, then run `python3 generate_png_from_tiff.py`.
 
-2. Run `docker build -t local-grayscale-cnn .` to build from `Dockerfile`.
+2. Run `docker build -t local-grayscale-cnn .` to build from `Dockerfile`. You will need to rerun this in order for changes to propagate from `main.py` and other files to what you see in the container.
 
 3. Run `docker run -it local-grayscale-cnn /bin/bash`. You are now in the Docker container!
 
