@@ -10,14 +10,16 @@ from datetime import datetime
 from itertools import islice, cycle
 from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses
 
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
 # set parameters
 seed = 123
 img_dir = pathlib.Path('Greyscale_Images_png/')
-img_height = 256 # TODO: reset to 2048 on CHTC!
-img_width = 256  # TODO: reset to 2048 on CHTC!
-batch_size = 2 # TODO: reset to 32 on CHTC!
+img_height = 2048
+img_width = 2048
+batch_size = 32
 validation_split = 0.2
-epoch_count = 2 # TODO: increase count on CHTC!
+epoch_count = 3
 verbose = True
 
 random.seed(seed)
@@ -61,21 +63,21 @@ if __name__ == '__main__':
     alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.MaxPooling2D(3, strides=2))
-    # alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same'))
-    # alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
-    # alexnet.add(layers.Activation('relu'))
-    # alexnet.add(layers.MaxPooling2D(3, strides=2))
+    alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same'))
+    alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
+    alexnet.add(layers.Activation('relu'))
+    alexnet.add(layers.MaxPooling2D(3, strides=2))
     alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same'))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same'))
-    # alexnet.add(layers.Activation('relu'))
-    # alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same'))
+    alexnet.add(layers.Activation('relu'))
+    alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same'))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.Flatten())
-    # alexnet.add(layers.Dense(4096, activation='relu'))
-    # alexnet.add(layers.Dropout(0.5))
-    # alexnet.add(layers.Dense(4096, activation='relu'))
-    # alexnet.add(layers.Dropout(0.5))
+    alexnet.add(layers.Dense(4096, activation='relu'))
+    alexnet.add(layers.Dropout(0.5))
+    alexnet.add(layers.Dense(4096, activation='relu'))
+    alexnet.add(layers.Dropout(0.5))
     alexnet.add(layers.Dense(num_classes, activation='softmax'))
     alexnet.compile(
         optimizer='adam',

@@ -29,9 +29,12 @@ preserve_relative_paths = True
 #
 # Tell HTCondor what amount of compute resources
 #  each job will need on the computer where it runs.
-request_cpus = 1
-request_memory = 1GB
-request_disk = 5GB
++WantGPULab = true
++GPUJobLength = "short"
+request_gpus = 1
+request_cpus = 10
+request_memory = 1TB
+request_disk = 2GB
 #
 # Tell HTCondor to run 3 instances of our job:
 # queue 3
