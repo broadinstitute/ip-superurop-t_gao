@@ -10,20 +10,25 @@ from datetime import datetime
 from itertools import islice, cycle
 from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses
 
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+# print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 # set parameters
 seed = 123
 img_dir = pathlib.Path('Greyscale_Images_png/')
 img_height = 2048
 img_width = 2048
-batch_size = 32
+batch_size = 16
 validation_split = 0.2
-epoch_count = 3
+epoch_count = 25
 verbose = True
 
 random.seed(seed)
-datagen = preprocessing.image.ImageDataGenerator(validation_split=validation_split)
+datagen = preprocessing.image.ImageDataGenerator(
+    validation_split=validation_split,
+    horizontal_flip=True,
+    vertical_flip=True,
+    rotation_range=20
+)
 
 def repeat_iterator(it, count):
     return islice(cycle(it), count)
@@ -59,25 +64,27 @@ if __name__ == '__main__':
     # build AlexNet CNN
     alexnet = models.Sequential()
     # alexnet.add(layers.experimental.preprocessing.Resizing(224, 224, interpolation="bilinear", input_shape=x_train.shape[1:]))
-    alexnet.add(layers.Conv2D(96, 11, strides=4, padding='same'))
+    alexnet.add(layers.Conv2D(96, 11, strides=4, padding='same', kernel_regularizer='l2'))
     alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.MaxPooling2D(3, strides=2))
-    alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same'))
+    alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same', kernel_regularizer='l2'))
     alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.MaxPooling2D(3, strides=2))
-    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same'))
+    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
     alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same'))
+    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
     alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same'))
+    alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same', kernel_regularizer='l2'))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.Flatten())
-    alexnet.add(layers.Dense(4096, activation='relu'))
+    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
     alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(4096, activation='relu'))
+    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
     alexnet.add(layers.Dropout(0.5))
+    # alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
+    # alexnet.add(layers.Dropout(0.5))
     alexnet.add(layers.Dense(num_classes, activation='softmax'))
     alexnet.compile(
         optimizer='adam',
@@ -126,7 +133,7 @@ if __name__ == '__main__':
             validation_data=validation_ds,
             validation_freq=1,
             epochs=1,
-            callbacks=[cp_callback]
+            callbacks=[cp_callback] # TODO: add earlystopping callback to prevent epoch overfitting? https://www.geeksforgeeks.org/choose-optimal-number-of-epochs-to-train-a-neural-network-in-keras
         ).history
 
         # update history
