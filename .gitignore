@@ -1,9 +1,7 @@
 .DS_Store
 data/
-repos/PANet/runs/
-repos/PANet/pretrained_model/
-repos/CHTC-test/outputs/
-grayscale-CNN/Greyscale_Images/
-grayscale-CNN/Greyscale_Images_png/
-repos/grayscale-CNN/outputs/
-repos/grayscale-CNN/core.*
+PANet/runs/
+PANet/pretrained_model/
+CHTC-test/outputs/
+CNN-backbone/Greyscale_Images/
+CNN-backbone/Greyscale_Images_png/
