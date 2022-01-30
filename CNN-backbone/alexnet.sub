@@ -24,7 +24,7 @@ error = outputs/alexnet_$(Cluster)_$(Process).err
 #  used if there were any other files needed for the executable to use.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = main.py,generate_png_from_tiff.py,Greyscale_Images/
+transfer_input_files = main.py,Greyscale_Images_png/
 preserve_relative_paths = True
 #
 # Tell HTCondor what amount of compute resources
@@ -32,9 +32,9 @@ preserve_relative_paths = True
 +WantGPULab = true
 +GPUJobLength = "short"
 request_gpus = 1
-request_cpus = 10
-request_memory = 1TB
-request_disk = 5GB
+request_cpus = 2
+request_memory = 8GB
+request_disk = 250GB
 #
 # Tell HTCondor to run 3 instances of our job:
 # queue 3

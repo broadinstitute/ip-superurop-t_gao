@@ -15,11 +15,11 @@ from tensorflow.keras import callbacks, datasets, layers, models, preprocessing,
 # set parameters
 seed = 123
 img_dir = pathlib.Path('Greyscale_Images_png/')
-img_height = 2048
-img_width = 2048
+img_height = 256
+img_width = 256
 batch_size = 16
 validation_split = 0.2
-epoch_count = 25
+epoch_count = 100
 verbose = True
 
 random.seed(seed)
@@ -105,7 +105,17 @@ if __name__ == '__main__':
         cp_callback = callbacks.ModelCheckpoint(
             filepath=checkpoint_dir+time_as_string + '_checkpoint_epoch-' + str(epoch_num) + '_loss-{val_loss:.2f}.hdf5',
             monitor='val_loss',
+            save_best_only=True,
+            mode='min',
             verbose=1
+        )
+
+        # create earlystopping callback per https://www.geeksforgeeks.org/choose-optimal-number-of-epochs-to-train-a-neural-network-in-keras
+        earlystopping = callbacks.EarlyStopping(
+            monitor ="val_loss", 
+            mode ="min",
+            patience = 5, 
+            # restore_best_weights = True
         )
 
         # load training dataset
@@ -133,12 +143,12 @@ if __name__ == '__main__':
             validation_data=validation_ds,
             validation_freq=1,
             epochs=1,
-            callbacks=[cp_callback] # TODO: add earlystopping callback to prevent epoch overfitting? https://www.geeksforgeeks.org/choose-optimal-number-of-epochs-to-train-a-neural-network-in-keras
+            callbacks=[cp_callback, earlystopping]
         ).history
 
         # update history
         for key in new_history:
-            print('key', key)
+            # print('key', key)
             if key not in history:
                 history[key] = []
             history[key].append(new_history[key][0])

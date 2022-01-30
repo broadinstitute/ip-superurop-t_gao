@@ -5,3 +5,6 @@ PANet/pretrained_model/
 CHTC-test/outputs/
 CNN-backbone/Greyscale_Images/
 CNN-backbone/Greyscale_Images_png/
+CNN-backbone/Greyscale_Images_tmp/
+CNN-backbone/*.zip
+CNN-backbone/outputs/
