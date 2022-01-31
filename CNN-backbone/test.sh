@@ -4,8 +4,8 @@
 #
 # echo "Beginning CHTC test Job $1 running on `whoami`@`hostname`"
 #
-echo "cluster $(Cluster)"
-echo "process $1"
+echo "cluster $1"
+echo "process $2"
 #mkdir outputs/$(Cluster)_$(Process)
 #echo "in home directory" > homedir.txt
 #cd outputs

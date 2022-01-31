@@ -15,7 +15,7 @@ log = outputs/alexnet_$(Cluster).log
 #  $(Process) will be a integer number for each job, starting with "0"
 #  and increasing for the relevant number of jobs.
 executable = test.sh
-arguments = $(Process)
+arguments = "$(Cluster) $(Process)"
 output = outputs/alexnet_$(Cluster)_$(Process).out
 error = outputs/alexnet_$(Cluster)_$(Process).err
 #
