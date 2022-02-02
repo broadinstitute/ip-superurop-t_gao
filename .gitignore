@@ -8,3 +8,4 @@ CNN-backbone/Greyscale_Images_png/
 CNN-backbone/Greyscale_Images_tmp/
 CNN-backbone/*.zip
 CNN-backbone/outputs/
+CNN-backbone/*.png
