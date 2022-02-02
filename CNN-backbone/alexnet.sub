@@ -6,7 +6,7 @@
 #  your job. Wherever you see $(Cluster), HTCondor will insert the
 #  queue number assigned to this set of jobs at the time of submission.
 universe = docker
-docker_image = teresahgao/superurop-grayscale-cnn:tensorflow-2.3.0
+docker_image = teresahgao/superurop-grayscale-cnn
 log = outputs/alexnet_$(Cluster).log
 #
 # Specify your executable (single binary or a script that runs several
@@ -32,7 +32,7 @@ preserve_relative_paths = True
 +WantGPULab = true
 +GPUJobLength = "short"
 request_gpus = 1
-request_cpus = 2
+request_cpus = 1
 request_memory = 8GB
 request_disk = 250GB
 #

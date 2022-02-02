@@ -7,7 +7,9 @@ echo "Beginning CHTC Job $1"
 python3 main.py
 #
 mkdir donttransfer
-for f in *.hdf5 *.png
+FILES="*.hdf5
+*.png"
+for f in $FILES
 do
   echo "processing file $f"
   cp $f $1_$(basename -- $f)

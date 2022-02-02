@@ -10,7 +10,7 @@ from itertools import islice, cycle
 from tensorflow import nn, data
 from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses, utils
 
-AUTOTUNE = data.AUTOTONE
+AUTOTUNE = data.AUTOTUNE
 
 # set parameters
 seed = 123
@@ -21,14 +21,14 @@ batch_size = 16
 validation_split = 0.2
 epoch_count = 100
 verbose = True
-
+num_classes = len(next(os.walk(img_dir))[1])
 random.seed(seed)
-datagen = preprocessing.image.ImageDataGenerator(
-    validation_split=validation_split,
-    horizontal_flip=True,
-    vertical_flip=True,
-    rotation_range=20
-)
+# datagen = preprocessing.image.ImageDataGenerator(
+#     validation_split=validation_split,
+#     horizontal_flip=True,
+#     vertical_flip=True,
+#     rotation_range=20
+# )
 
 if __name__ == '__main__':
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         batch_size=batch_size
     ).cache().prefetch(buffer_size=AUTOTUNE)
 
-    val_ds = utils.image_dataset_from_directory(
+    validation_ds = utils.image_dataset_from_directory(
         img_dir,
         validation_split=0.2,
         subset='training',
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         batch_size=batch_size
     ).cache().prefetch(buffer_size=AUTOTUNE)
 
-    print(train_ds.class_names)
+    # print(train_ds.class_names)
 
 
 
