@@ -2,15 +2,25 @@
 
 import math
 import matplotlib.pyplot as plt
+import neptune.new as neptune
 import os
 import pathlib
 import random
 
 from itertools import islice, cycle
+from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+from neptune.new.types import File
 from tensorflow import nn, data
 from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses, utils
 
 AUTOTUNE = data.AUTOTUNE
+
+# initialize Neptune.ai with API token
+with open('neptune-api-token.txt', 'r') as f:
+    run = neptune.init(
+        api_token=f.read(),
+        project='ip-superurop-tgao'
+    )
 
 # set parameters
 seed = 123
@@ -29,6 +39,17 @@ random.seed(seed)
 #     vertical_flip=True,
 #     rotation_range=20
 # )
+
+# log hyperparameters to Neptune.ai
+parameters = {
+    'seed': seed,
+    'img_height': img_height,
+    'img_width': img_width,
+    'batch_size': batch_size,
+    'validation_split': validation_split,
+    'n_epochs': epoch_count,
+    'num_classes': num_classes
+}
 
 if __name__ == '__main__':
 
@@ -83,7 +104,7 @@ if __name__ == '__main__':
     alexnet.add(layers.Dense(num_classes, activation='softmax'))
     alexnet.compile(
         optimizer='adam',
-        loss=losses.SparseCategoricalCrossentropy(from_logits=True),
+        loss=losses.SparseCategoricalCrossentropy(), # (from_logits=True),
         metrics=['accuracy']
     )
 
@@ -119,8 +140,11 @@ if __name__ == '__main__':
         train_ds,
         validation_data=validation_ds,
         epochs=epoch_count,
-        callbacks=[cp_callback, earlystopping]
+        callbacks=[NeptuneCallback(run=run), cp_callback, earlystopping]
     ).history
+
+    # upload model files to Neptune
+    run['model/saved_model'].upload_files('*.hdf5')
 
     # plot loss and accuracy
     fig, axs = plt.subplots(2, 1, figsize=(15,15))

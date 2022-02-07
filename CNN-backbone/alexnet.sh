@@ -4,6 +4,7 @@
 #
 echo "Beginning CHTC Job $1"
 #
+export NEPTUNE_API_TOKEN=`cat neptune-api-token.txt`
 python3 main.py
 #
 mkdir donttransfer
