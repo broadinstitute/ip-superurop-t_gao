@@ -8,3 +8,7 @@ CNN-backbone/Greyscale_Images_png/
 CNN-backbone/Greyscale_Images_tmp/
 CNN-backbone/*.zip
 CNN-backbone/outputs/
+CNN-backbone/*.png
+CNN-backbone/*.hdf5
+*docker_stderror
+CNN-backbone/neptune-api-token.txt

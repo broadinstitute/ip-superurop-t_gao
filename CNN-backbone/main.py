@@ -1,75 +1,91 @@
 #!/usr/bin/env python
 
+import math
+import matplotlib.pyplot as plt
+import neptune.new as neptune
 import os
 import pathlib
-import math
 import random
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from datetime import datetime
-from itertools import islice, cycle
-from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses
 
-# print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+from itertools import islice, cycle
+from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+from neptune.new.types import File
+from tensorflow import nn, data
+from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses, utils
+
+AUTOTUNE = data.AUTOTUNE
+
+# initialize Neptune.ai with API token
+with open('neptune-api-token.txt', 'r') as f:
+    run = neptune.init(
+        api_token=f.read(),
+        project='ip-superurop-tgao'
+    )
 
 # set parameters
 seed = 123
 img_dir = pathlib.Path('Greyscale_Images_png/')
 img_height = 256
 img_width = 256
-batch_size = 16
+batch_size = 32
 validation_split = 0.2
 epoch_count = 100
 verbose = True
-
+num_classes = len(next(os.walk(img_dir))[1])
 random.seed(seed)
-datagen = preprocessing.image.ImageDataGenerator(
-    validation_split=validation_split,
-    horizontal_flip=True,
-    vertical_flip=True,
-    rotation_range=20
-)
+# datagen = preprocessing.image.ImageDataGenerator(
+#     validation_split=validation_split,
+#     horizontal_flip=True,
+#     vertical_flip=True,
+#     rotation_range=20
+# )
 
-def repeat_iterator(it, count):
-    return islice(cycle(it), count)
-
-def get_validation_and_test_iterators(img_count_validation, img_count_test, validation_repeats=1):
-    ''' Create validation and test datasets. '''
-    nontrain_ds = preprocessing.image.DirectoryIterator(
-        img_dir,
-        datagen,
-        target_size=(img_height, img_width),
-        batch_size=batch_size,
-        seed=seed,
-        subset='validation'
-    )
-    if verbose:
-        print('-------\ncreated nontrain_ds\n-------')
-    validation_ds = islice(cycle(islice(nontrain_ds, img_count_validation)), validation_repeats) # 10% validation
-    test_ds = islice(nontrain_ds, img_count_validation) # 10% testing
-    if verbose:
-        print('-------\ncreated validation_ds with size', img_count_validation, 'and test_ds with size', img_count_test, '\n-------')
-
-    return (validation_ds, test_ds)
+# log hyperparameters to Neptune.ai
+parameters = {
+    'seed': seed,
+    'img_height': img_height,
+    'img_width': img_width,
+    'batch_size': batch_size,
+    'validation_split': validation_split,
+    'n_epochs': epoch_count,
+    'num_classes': num_classes
+}
 
 if __name__ == '__main__':
-    # calculate number of classes and total image count
-    num_classes = len(next(os.walk(img_dir))[1])
-    if verbose:
-        print('-------\nnum_classes is', num_classes, '\n-------')
-    img_count_total = sum([len(files) for r, d, files in os.walk(img_dir)])
-    if verbose:
-        print('-------\nimg_count_total is', img_count_total, '\n-------')
 
-    # build AlexNet CNN
+    ### LOAD DATASETS ###
+
+    train_ds = utils.image_dataset_from_directory(
+        img_dir,
+        validation_split=0.2,
+        subset='training',
+        seed=seed,
+        image_size=(img_height, img_width),
+        batch_size=batch_size
+    ).cache().prefetch(buffer_size=AUTOTUNE)
+
+    validation_ds = utils.image_dataset_from_directory(
+        img_dir,
+        validation_split=0.2,
+        subset='training',
+        seed=seed,
+        image_size=(img_height, img_width),
+        batch_size=batch_size
+    ).cache().prefetch(buffer_size=AUTOTUNE)
+
+    # print(train_ds.class_names)
+
+
+
+    ### BUILD ALEXNET CNN ###
+
     alexnet = models.Sequential()
-    # alexnet.add(layers.experimental.preprocessing.Resizing(224, 224, interpolation="bilinear", input_shape=x_train.shape[1:]))
     alexnet.add(layers.Conv2D(96, 11, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
+    alexnet.add(layers.Lambda(nn.local_response_normalization))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.MaxPooling2D(3, strides=2))
     alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
+    alexnet.add(layers.Lambda(nn.local_response_normalization))
     alexnet.add(layers.Activation('relu'))
     alexnet.add(layers.MaxPooling2D(3, strides=2))
     alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
@@ -83,75 +99,53 @@ if __name__ == '__main__':
     alexnet.add(layers.Dropout(0.5))
     alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
     alexnet.add(layers.Dropout(0.5))
-    # alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    # alexnet.add(layers.Dropout(0.5))
+    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
+    alexnet.add(layers.Dropout(0.5))
     alexnet.add(layers.Dense(num_classes, activation='softmax'))
     alexnet.compile(
         optimizer='adam',
-        loss=losses.categorical_crossentropy,
+        loss=losses.SparseCategoricalCrossentropy(), # (from_logits=True),
         metrics=['accuracy']
     )
 
-    test_ds = None
-    history = {}
-    time_as_string = str(datetime.now().timestamp())
-    for epoch_num in range(epoch_count):
-        # create callback to save model
-        checkpoint_dir = "./"
-        # if not os.path.exists(checkpoint_dir):
-        #     os.makedirs(checkpoint_dir)
-        #     if verbose:
-        #         print('created checkpoint_dir', checkpoint_dir)
-        cp_callback = callbacks.ModelCheckpoint(
-            filepath=checkpoint_dir+time_as_string + '_checkpoint_epoch-' + str(epoch_num) + '_loss-{val_loss:.2f}.hdf5',
-            monitor='val_loss',
-            save_best_only=True,
-            mode='min',
-            verbose=1
-        )
 
-        # create earlystopping callback per https://www.geeksforgeeks.org/choose-optimal-number-of-epochs-to-train-a-neural-network-in-keras
-        earlystopping = callbacks.EarlyStopping(
-            monitor ="val_loss", 
-            mode ="min",
-            patience = 5, 
-            # restore_best_weights = True
-        )
 
-        # load training dataset
-        train_ds = preprocessing.image.DirectoryIterator(
-            img_dir,
-            datagen,
-            target_size=(img_height, img_width),
-            batch_size=batch_size,
-            seed=seed,
-            subset='training'
-        )
-        if verbose:
-            print('-------\ncreated train_ds\n-------')
+    ### CREATE CALLBACKS TO SAVE MODEL ###
 
-        # prepare iterators
-        img_count_nontrain = round(img_count_total * validation_split)
-        img_count_train = img_count_total - img_count_nontrain
-        img_count_validation = math.ceil(img_count_nontrain // 2)
-        img_count_test = img_count_nontrain - img_count_validation
-        validation_ds, test_ds = get_validation_and_test_iterators(img_count_validation, img_count_test, validation_repeats=math.ceil(img_count_train / batch_size)); # TODO
+    checkpoint_dir = "./"
+    # if not os.path.exists(checkpoint_dir):
+    #     os.makedirs(checkpoint_dir)
+    #     if verbose:
+    #         print('created checkpoint_dir', checkpoint_dir)
+    cp_callback = callbacks.ModelCheckpoint(
+        filepath=checkpoint_dir+ '_checkpoint_epoch-{epoch:0>3d}_loss-{val_loss:.2f}.hdf5',
+        monitor='val_loss',
+        save_best_only=True,
+        mode='min',
+        verbose=1
+    )
 
-        # train model
-        new_history = alexnet.fit(
-            train_ds,
-            validation_data=validation_ds,
-            validation_freq=1,
-            epochs=1,
-            callbacks=[cp_callback, earlystopping]
-        ).history
+    earlystopping = callbacks.EarlyStopping(
+        monitor ="val_loss",
+        # mode ="min",
+        patience = 5,
+        restore_best_weights = True
+    )
 
-        # update history
-        for key in new_history:
-            # print('key', key)
-            if key not in history:
-                history[key] = []
-            history[key].append(new_history[key][0])
+
+
+    ### TRAIN MODEL ###
+
+    history = alexnet.fit(
+        train_ds,
+        validation_data=validation_ds,
+        epochs=epoch_count,
+        callbacks=[NeptuneCallback(run=run), cp_callback, earlystopping]
+    ).history
+
+    # upload model files to Neptune
+    run['model/saved_model'].upload_files('*.hdf5')
+    run['model/graph'].upload_files('*.png')
 
     # plot loss and accuracy
     fig, axs = plt.subplots(2, 1, figsize=(15,15))
@@ -167,11 +161,6 @@ if __name__ == '__main__':
     axs[1].set_xlabel('Epochs')
     axs[1].set_ylabel('Accuracy')
     axs[1].legend(['Train', 'Val'])
-    plt.savefig(time_as_string + '_loss-accuracy.png', bbox_inches='tight')
+    plt.savefig('loss-accuracy.png', bbox_inches='tight')
 
-    # evaluate performance on test data
-    (test_loss, test_accuracy) = alexnet.evaluate(test_ds)
-    print('\ntest loss:', test_loss)
-    print('test accuracy:', test_accuracy)
-
-print('\ndone :)')
+    print('\ndone :)')
