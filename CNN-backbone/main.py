@@ -27,7 +27,7 @@ seed = 123
 img_dir = pathlib.Path('Greyscale_Images_png/')
 img_height = 256
 img_width = 256
-batch_size = 16
+batch_size = 32
 validation_split = 0.2
 epoch_count = 100
 verbose = True
@@ -99,8 +99,8 @@ if __name__ == '__main__':
     alexnet.add(layers.Dropout(0.5))
     alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
     alexnet.add(layers.Dropout(0.5))
-    # alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    # alexnet.add(layers.Dropout(0.5))
+    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
+    alexnet.add(layers.Dropout(0.5))
     alexnet.add(layers.Dense(num_classes, activation='softmax'))
     alexnet.compile(
         optimizer='adam',
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
     earlystopping = callbacks.EarlyStopping(
         monitor ="val_loss",
-        mode ="min",
+        # mode ="min",
         patience = 5,
         restore_best_weights = True
     )
@@ -145,6 +145,7 @@ if __name__ == '__main__':
 
     # upload model files to Neptune
     run['model/saved_model'].upload_files('*.hdf5')
+    run['model/graph'].upload_files('*.png')
 
     # plot loss and accuracy
     fig, axs = plt.subplots(2, 1, figsize=(15,15))
