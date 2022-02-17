@@ -12,3 +12,4 @@ CNN-backbone/*.png
 CNN-backbone/*.hdf5
 *docker_stderror
 CNN-backbone/neptune-api-token.txt
+CNN-backbone/handpicked/
