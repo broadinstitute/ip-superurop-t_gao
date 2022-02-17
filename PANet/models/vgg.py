@@ -17,56 +17,21 @@ class Encoder(nn.Module):
     """
     def __init__(self, in_channels=3, pretrained_path=None):
         super().__init__()
-        # self.pretrained_path = pretrained_path
-        self.pretrained_path = 'TODO' # TODO
+        self.pretrained_path = pretrained_path
 
-        model = load_model(self.pretrained_path)
-        weights = model.get_weights()
         self.features = nn.Sequential(
-            # alexnet.add(layers.Conv2D(96, 11, strides=4, padding='same', kernel_regularizer='l2'))
-            nn.Conv2d(96, 96, 11, stride=4, padding=0)
-
-            # alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
-            # alexnet.add(layers.Activation('relu'))
-            # alexnet.add(layers.MaxPooling2D(3, strides=2))
-            # alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same', kernel_regularizer='l2'))
-            # alexnet.add(layers.Lambda(tf.nn.local_response_normalization))
-            # alexnet.add(layers.Activation('relu'))
-            # alexnet.add(layers.MaxPooling2D(3, strides=2))
-            # alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
-            # alexnet.add(layers.Activation('relu'))
-            # alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
-            # alexnet.add(layers.Activation('relu'))
-            # alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same', kernel_regularizer='l2'))
-            # alexnet.add(layers.Activation('relu'))
-            # alexnet.add(layers.Flatten())
-            # alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-            # alexnet.add(layers.Dropout(0.5))
-            # alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-            # alexnet.add(layers.Dropout(0.5))
-            # # alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-            # # alexnet.add(layers.Dropout(0.5))
-            # alexnet.add(layers.Dense(num_classes, activation='softmax'))
-            # alexnet.compile(
-            #     optimizer='adam',
-            #     loss=losses.categorical_crossentropy,
-            #     metrics=['accuracy']
-            # )
-            # TODO
+            self._make_layer(2, in_channels, 64),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            self._make_layer(2, 64, 128),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            self._make_layer(3, 128, 256),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            self._make_layer(3, 256, 512),
+            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
+            self._make_layer(3, 512, 512, dilation=2, lastRelu=False),
         )
-        # self.features = nn.Sequential(
-        #     self._make_layer(2, in_channels, 64),
-        #     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-        #     self._make_layer(2, 64, 128),
-        #     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-        #     self._make_layer(3, 128, 256),
-        #     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-        #     self._make_layer(3, 256, 512),
-        #     nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-        #     self._make_layer(3, 512, 512, dilation=2, lastRelu=False),
-        # )
 
-        # self._init_weights()
+        self._init_weights()
 
     def forward(self, x):
         return self.features(x)
