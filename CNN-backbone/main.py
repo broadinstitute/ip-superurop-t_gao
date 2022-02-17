@@ -1,26 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import math
-import matplotlib.pyplot as plt
-import neptune.new as neptune
-import os
-import pathlib
-import random
+import torch
+import torch.nn as nn
 
-from itertools import islice, cycle
-from neptune.new.integrations.tensorflow_keras import NeptuneCallback
-from neptune.new.types import File
-from tensorflow import nn, data
-from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses, utils
+from functools import partial
+from dataclasses import dataclass
+from collections import OrderedDict
 
-AUTOTUNE = data.AUTOTUNE
 
-# initialize Neptune.ai with API token
-with open('neptune-api-token.txt', 'r') as f:
-    run = neptune.init(
-        api_token=f.read(),
-        project='ip-superurop-tgao'
-    )
 
 # set parameters
 seed = 123
@@ -33,12 +20,6 @@ epoch_count = 100
 verbose = True
 num_classes = len(next(os.walk(img_dir))[1])
 random.seed(seed)
-# datagen = preprocessing.image.ImageDataGenerator(
-#     validation_split=validation_split,
-#     horizontal_flip=True,
-#     vertical_flip=True,
-#     rotation_range=20
-# )
 
 # log hyperparameters to Neptune.ai
 parameters = {
@@ -51,9 +32,146 @@ parameters = {
     'num_classes': num_classes
 }
 
-if __name__ == '__main__':
 
-    ### LOAD DATASETS ###
+
+# implement ResNet (from https://github.com/FrancescoSaverioZuppichini/ResNet)
+
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.in_channels, self.out_channels =  in_channels, out_channels
+        self.blocks = nn.Identity()
+        self.shortcut = nn.Identity()
+
+    def forward(self, x):
+        residual = x
+        if self.should_apply_shortcut: residual = self.shortcut(x)
+        x = self.blocks(x)
+        x += residual
+        return x
+
+    @property
+    def should_apply_shortcut(self):
+        return self.in_channels != self.out_channels
+
+class ResNetResidualBlock(ResidualBlock):
+    def __init__(self, in_channels, out_channels, expansion=1, downsampling=1, conv=conv3x3, *args, **kwargs):
+        super().__init__(in_channels, out_channels)
+        self.expansion, self.downsampling, self.conv = expansion, downsampling, conv
+        self.shortcut = nn.Sequential(OrderedDict(
+        {
+            'conv' : nn.Conv2d(self.in_channels, self.expanded_channels, kernel_size=1,
+                      stride=self.downsampling, bias=False),
+            'bn' : nn.BatchNorm2d(self.expanded_channels)
+
+        })) if self.should_apply_shortcut else None
+
+
+    @property
+    def expanded_channels(self):
+        return self.out_channels * self.expansion
+
+    @property
+    def should_apply_shortcut(self):
+        return self.in_channels != self.expanded_channels
+
+class ResNetBasicBlock(ResNetResidualBlock):
+    expansion = 1
+    def __init__(self, in_channels, out_channels, activation=nn.ReLU, *args, **kwargs):
+        super().__init__(in_channels, out_channels, *args, **kwargs)
+        self.blocks = nn.Sequential(
+            conv_bn(self.in_channels, self.out_channels, conv=self.conv, bias=False, stride=self.downsampling),
+            activation(),
+            conv_bn(self.out_channels, self.expanded_channels, conv=self.conv, bias=False),
+        )
+
+class ResNetLayer(nn.Module):
+    def __init__(self, in_channels, out_channels, block=ResNetBasicBlock, n=1, *args, **kwargs):
+        super().__init__()
+        # 'We perform downsampling directly by convolutional layers that have a stride of 2.'
+        downsampling = 2 if in_channels != out_channels else 1
+
+        self.blocks = nn.Sequential(
+            block(in_channels , out_channels, *args, **kwargs, downsampling=downsampling),
+            *[block(out_channels * block.expansion,
+                    out_channels, downsampling=1, *args, **kwargs) for _ in range(n - 1)]
+        )
+
+    def forward(self, x):
+        x = self.blocks(x)
+        return x
+
+class ResNetEncoder(nn.Module):
+    """
+    ResNet encoder composed by increasing different layers with increasing features.
+    """
+    def __init__(self, in_channels=3, blocks_sizes=[64, 128, 256, 512], deepths=[2,2,2,2], 
+                 activation=nn.ReLU, block=ResNetBasicBlock, *args,**kwargs):
+        super().__init__()
+        
+        self.blocks_sizes = blocks_sizes
+        
+        self.gate = nn.Sequential(
+            nn.Conv2d(in_channels, self.blocks_sizes[0], kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm2d(self.blocks_sizes[0]),
+            activation(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        
+        self.in_out_block_sizes = list(zip(blocks_sizes, blocks_sizes[1:]))
+        self.blocks = nn.ModuleList([ 
+            ResNetLayer(blocks_sizes[0], blocks_sizes[0], n=deepths[0], activation=activation, 
+                        block=block,  *args, **kwargs),
+            *[ResNetLayer(in_channels * block.expansion, 
+                          out_channels, n=n, activation=activation, 
+                          block=block, *args, **kwargs) 
+              for (in_channels, out_channels), n in zip(self.in_out_block_sizes, deepths[1:])]       
+        ])
+        
+        
+    def forward(self, x):
+        x = self.gate(x)
+        for block in self.blocks:
+            x = block(x)
+        return x
+
+class ResNetDecoder(nn.Module):
+    """
+    This class represents the tail of ResNet. It performs a global pooling and maps the output to the
+    correct class by using a fully connected layer.
+    """
+    def __init__(self, in_features, n_classes):
+        super().__init__()
+        self.avg = nn.AdaptiveAvgPool2d((1, 1))
+        self.decoder = nn.Linear(in_features, n_classes)
+
+    def forward(self, x):
+        x = self.avg(x)
+        x = x.view(x.size(0), -1)
+        x = self.decoder(x)
+        return x
+
+
+class ResNet(nn.Module):
+    
+    def __init__(self, in_channels, n_classes, *args, **kwargs):
+        super().__init__()
+        self.encoder = ResNetEncoder(in_channels, *args, **kwargs)
+        self.decoder = ResNetDecoder(self.encoder.blocks[-1].blocks[-1].expanded_channels, n_classes)
+        
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
+def resnet18(in_channels, n_classes):
+    return ResNet(in_channels, n_classes, block=ResNetBasicBlock, depths=[2, 2, 2, 2])
+
+
+
+if __name__ == '__main__':
+    
+    # load datasets
 
     train_ds = utils.image_dataset_from_directory(
         img_dir,
@@ -67,56 +185,20 @@ if __name__ == '__main__':
     validation_ds = utils.image_dataset_from_directory(
         img_dir,
         validation_split=0.2,
-        subset='training',
+        subset='validation',
         seed=seed,
         image_size=(img_height, img_width),
         batch_size=batch_size
     ).cache().prefetch(buffer_size=AUTOTUNE)
 
-    # print(train_ds.class_names)
+    model = resnet18(in_channels=1, n_classes=n_classes)
 
-
-
-    ### BUILD ALEXNET CNN ###
-
-    alexnet = models.Sequential()
-    alexnet.add(layers.Conv2D(96, 11, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Lambda(nn.local_response_normalization))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.MaxPooling2D(3, strides=2))
-    alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Lambda(nn.local_response_normalization))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.MaxPooling2D(3, strides=2))
-    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Flatten())
-    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(num_classes, activation='softmax'))
-    alexnet.compile(
-        optimizer='adam',
-        loss=losses.SparseCategoricalCrossentropy(), # (from_logits=True),
-        metrics=['accuracy']
-    )
-
-
-
-    ### CREATE CALLBACKS TO SAVE MODEL ###
-
+    # create callbacks to save model
     checkpoint_dir = "./"
-    # if not os.path.exists(checkpoint_dir):
-    #     os.makedirs(checkpoint_dir)
-    #     if verbose:
-    #         print('created checkpoint_dir', checkpoint_dir)
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+        if verbose:
+            print('created checkpoint_dir', checkpoint_dir)
     cp_callback = callbacks.ModelCheckpoint(
         filepath=checkpoint_dir+ '_checkpoint_epoch-{epoch:0>3d}_loss-{val_loss:.2f}.hdf5',
         monitor='val_loss',
@@ -132,11 +214,7 @@ if __name__ == '__main__':
         restore_best_weights = True
     )
 
-
-
-    ### TRAIN MODEL ###
-
-    history = alexnet.fit(
+    history = model.fit(
         train_ds,
         validation_data=validation_ds,
         epochs=epoch_count,
