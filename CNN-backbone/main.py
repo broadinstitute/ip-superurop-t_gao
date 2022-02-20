@@ -89,8 +89,9 @@ if __name__ == '__main__':
 
 
 
-    ### TRAIN MODEL ###
+    ### BUILD AND TRAIN MODEL ###
     model = applications.resnet50.ResNet50(classes=num_classes)
+    run['model/saved_model'] = model.summary()
     history = model.fit(
         train_ds,
         validation_data=validation_ds,
@@ -99,7 +100,6 @@ if __name__ == '__main__':
     ).history
 
     # upload model files to Neptune
-    run['model/saved_model'].upload_files('*.hdf5')
     run['model/graph'].upload_files('*.png')
 
     # plot loss and accuracy
