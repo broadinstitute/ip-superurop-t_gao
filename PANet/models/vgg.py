@@ -8,7 +8,6 @@ import torch.nn as nn
 class Encoder(nn.Module):
     """
     Encoder for few shot segmentation
-
     Args:
         in_channels:
             number of input channels
@@ -39,7 +38,6 @@ class Encoder(nn.Module):
     def _make_layer(self, n_convs, in_channels, out_channels, dilation=1, lastRelu=True):
         """
         Make a (conv, relu) layer
-
         Args:
             n_convs:
                 number of convolution layers

@@ -16,6 +16,7 @@ from dataloaders.transforms import RandomMirror, Resize, ToTensorNormalize
 from util.utils import set_seed, CLASS_LABELS
 from config import ex
 
+from keras.models import load_model
 
 @ex.automain
 def main(_run, _config, _log):
