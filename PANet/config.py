@@ -28,7 +28,7 @@ def cfg():
     seed = 1234
     cuda_visable = '0, 1, 2, 3, 4, 5, 6, 7'
     gpu_id = 0
-    mode = 'test' # 'train' or 'test'
+    mode = 'train' # 'test' # 'train' or 'test'
 
 
     if mode == 'train':

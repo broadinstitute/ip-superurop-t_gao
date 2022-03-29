@@ -1,3 +1,5 @@
+*adapted from https://github.com/kaixin96/PANet*
+
 # PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment
 
 This repo contains code for our ICCV 2019 paper [PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment](https://arxiv.org/abs/1908.06391).
@@ -13,6 +15,8 @@ This repo contains code for our ICCV 2019 paper [PANet: Few-Shot Image Semantic 
 * tqdm 4.32.2
 
 ### Data Preparation for VOC Dataset
+
+0. Download VOC dataset from [here](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html#devkit).
 
 1. Download `SegmentationClassAug`, `SegmentationObjectAug`, `ScribbleAugAuto` from [here](https://drive.google.com/drive/folders/1N00R9m9qe2rKZChZ8N7Hib_HR2HGtXHp?usp=sharing) and put them under `VOCdevkit/VOC2012`.
 

@@ -16,6 +16,18 @@ from dataloaders.transforms import RandomMirror, Resize, ToTensorNormalize
 from util.utils import set_seed, CLASS_LABELS
 from config import ex
 
+from keras.models import load_model
+
+import neptune.new as neptune
+from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+from neptune.new.types import File
+
+# initialize Neptune.ai with API token
+with open('../../neptune-api-token.txt', 'r') as f:
+    run = neptune.init(
+        api_token=f.read(),
+        project='ip-superurop-tgao'
+    )
 
 @ex.automain
 def main(_run, _config, _log):
@@ -34,12 +46,15 @@ def main(_run, _config, _log):
     torch.cuda.set_device(device=_config['gpu_id'])
     torch.set_num_threads(1)
 
-
     _log.info('###### Create model ######')
-    model = FewShotSeg(pretrained_path=_config['path']['init_path'], cfg=_config['model'])
+    pretrained_path = _config['path']['init_path']
+    model_cfg = _config['model']
+    model = FewShotSeg(pretrained_path=pretrained_path, cfg=model_cfg)
+    # run['model/pretrained_model'] = model.summary()
     model = nn.DataParallel(model.cuda(), device_ids=[_config['gpu_id'],])
     model.train()
 
+    # run['model/saved_model'] = model.module.summary()
 
     _log.info('###### Load data ######')
     data_name = _config['dataset']
@@ -52,16 +67,30 @@ def main(_run, _config, _log):
     labels = CLASS_LABELS[data_name][_config['label_sets']]
     transforms = Compose([Resize(size=_config['input_size']),
                           RandomMirror()])
+
+    base_dir = _config['path'][data_name]['data_dir']
+    split = _config['path'][data_name]['data_split']
+    to_tensor = ToTensorNormalize()
+    max_iters = _config['n_steps'] * _config['batch_size']
+    n_ways = _config['task']['n_ways']
+    n_shots = 5 # TODO # _config['task']['n_shots']
+    n_queries = _config['task']['n_queries']
+    batch_size = _config['batch_size']
+    shuffle = True
+    num_workers = 1
+    pin_memory = True
+    drop_last = True
+
     dataset = make_data(
-        base_dir=_config['path'][data_name]['data_dir'],
-        split=_config['path'][data_name]['data_split'],
+        base_dir=base_dir, # _config['path'][data_name]['data_dir'],
+        split=split, # _config['path'][data_name]['data_split'],
         transforms=transforms,
-        to_tensor=ToTensorNormalize(),
+        to_tensor=to_tensor, # ToTensorNormalize(),
         labels=labels,
-        max_iters=_config['n_steps'] * _config['batch_size'],
-        n_ways=_config['task']['n_ways'],
-        n_shots=_config['task']['n_shots'],
-        n_queries=_config['task']['n_queries']
+        max_iters=max_iters, # _config['n_steps'] * _config['batch_size'],
+        n_ways=n_ways, # _config['task']['n_ways'],
+        n_shots=n_shots, # _config['task']['n_shots'],
+        n_queries=n_queries # _config['task']['n_queries']
     )
     trainloader = DataLoader(
         dataset,
@@ -76,6 +105,30 @@ def main(_run, _config, _log):
     optimizer = torch.optim.SGD(model.parameters(), **_config['optim'])
     scheduler = MultiStepLR(optimizer, milestones=_config['lr_milestones'], gamma=0.1)
     criterion = nn.CrossEntropyLoss(ignore_index=_config['ignore_label'])
+
+    parameters = {
+        'pretrained_path': pretrained_path,
+        'model_cfg': model_cfg,
+        'base_dir': base_dir,
+        'split': split,
+        'transforms': transforms,
+        'to_tensor': to_tensor,
+        'labels': labels,
+        'max_iters': max_iters,
+        'n_ways': n_ways,
+        'n_shots': n_shots,
+        'n_queries': n_queries,
+        'batch_size': batch_size,
+        'shuffle': shuffle,
+        'num_workers': num_workers,
+        'pin_memory': pin_memory,
+        'drop_last': drop_last,
+        'optimizer': optimizer,
+        'scheduler': scheduler,
+        'criterion': criterion,
+    }
+
+    run['model/parameters'] = parameters
 
     i_iter = 0
     log_loss = {'loss': 0, 'align_loss': 0}
@@ -111,19 +164,25 @@ def main(_run, _config, _log):
         _run.log_scalar('align_loss', align_loss)
         log_loss['loss'] += query_loss
         log_loss['align_loss'] += align_loss
-
+        # run['train/loss'].log(query_loss)
+        # run['train/align_loss'].log(align_loss)
 
         # print loss and take snapshots
         if (i_iter + 1) % _config['print_interval'] == 0:
             loss = log_loss['loss'] / (i_iter + 1)
             align_loss = log_loss['align_loss'] / (i_iter + 1)
             print(f'step {i_iter+1}: loss: {loss}, align_loss: {align_loss}')
+            run['train/loss'].log(loss)
+            run['train/align_loss'].log(align_loss)
 
         if (i_iter + 1) % _config['save_pred_every'] == 0:
             _log.info('###### Taking snapshot ######')
             torch.save(model.state_dict(),
                        os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter + 1}.pth'))
+            run['model/state_dict/snapshot/'].upload(os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter + 1}.pth'))
 
     _log.info('###### Saving final model ######')
     torch.save(model.state_dict(),
                os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter + 1}.pth'))
+
+    run['model/state_dict/final'].upload(os.path.join(f'{_run.observers[0].dir}/snapshots', f'{i_iter + 1}.pth'))
