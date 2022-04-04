@@ -1,6 +1,18 @@
-*adapted from https://github.com/kaixin96/PANet*
+# Instructions for running on CHTC
 
-# PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment
+0. Create `.txt` file called `neptune-api-token.txt` whose contents are your API token for Neptune.ai.
+
+## Original PANet
+
+1. Follow instructions from original PANet paper repo, reproduced below.
+2. Zip and transfer `VOCdevkit` and `pretrained_model.zip` to `.` (`superurop/PANet/`).
+3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet.sub`.
+
+## HPA
+
+TBD
+
+# PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment (README adapted from [original repo by Wang et al.](https://github.com/kaixin96/PANet)
 
 This repo contains code for our ICCV 2019 paper [PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment](https://arxiv.org/abs/1908.06391).
 
@@ -18,14 +30,14 @@ This repo contains code for our ICCV 2019 paper [PANet: Few-Shot Image Semantic 
 
 0. Download VOC dataset from [here](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html#devkit).
 
-1. Download `SegmentationClassAug`, `SegmentationObjectAug`, `ScribbleAugAuto` from [here](https://drive.google.com/drive/folders/1N00R9m9qe2rKZChZ8N7Hib_HR2HGtXHp?usp=sharing) and put them under `VOCdevkit/VOC2012`.
+1. Download `SegmentationClassAug`, `SegmentationObjectAug`, `ScribbleAugAuto` from [here](https://drive.google.com/drive/folders/1N00R9m9qe2rKZChZ8N7Hib_HR2HGtXHp?usp=sharing) and put them under `VOCdevkit/VOC2012/`.
 
 2. Download `Segmentation` from [here](https://drive.google.com/drive/folders/1N00R9m9qe2rKZChZ8N7Hib_HR2HGtXHp?usp=sharing) and use it to replace `VOCdevkit/VOC2012/ImageSets/Segmentation`.
 
 
 ### Usage
 
-1. Download the ImageNet-pretrained weights of VGG16 network from `torchvision`: [https://download.pytorch.org/models/vgg16-397923af.pth](https://download.pytorch.org/models/vgg16-397923af.pth) and put it under `PANet/pretrained_model` folder.
+1. Download the ImageNet-pretrained weights of VGG16 network from `torchvision`: [https://download.pytorch.org/models/vgg16-397923af.pth](https://download.pytorch.org/models/vgg16-397923af.pth) and put it under `PANet/pretrained_model/` folder.
 
 2. Change configuration via `config.py`, then train the model using `python train.py` or test the model using `python test.py`. You can use `sacred` features, e.g. `python train.py with gpu_id=2`.
 
