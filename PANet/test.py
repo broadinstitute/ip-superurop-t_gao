@@ -19,6 +19,17 @@ from util.metric import Metric
 from util.utils import set_seed, CLASS_LABELS, get_bbox
 from config import ex
 
+import neptune.new as neptune
+from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+from neptune.new.types import File
+
+# initialize Neptune.ai with API token
+with open('../../neptune-api-token.txt', 'r') as f:
+    run = neptune.init(
+        api_token=f.read(),
+        project='ip-superurop-tgao'
+    )
+
 
 @ex.automain
 def main(_run, _config, _log):
@@ -37,6 +48,7 @@ def main(_run, _config, _log):
 
     _log.info('###### Create model ######')
     model = FewShotSeg(pretrained_path=_config['path']['init_path'], cfg=_config['model'])
+    run['model/summary'] = model.get_summary()
     model = nn.DataParallel(model.cuda(), device_ids=[_config['gpu_id'],])
     if not _config['notrain']:
         model.load_state_dict(torch.load(_config['snapshot'], map_location='cpu'))

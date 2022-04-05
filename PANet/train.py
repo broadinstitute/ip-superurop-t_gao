@@ -50,6 +50,7 @@ def main(_run, _config, _log):
     pretrained_path = _config['path']['init_path']
     model_cfg = _config['model']
     model = FewShotSeg(pretrained_path=pretrained_path, cfg=model_cfg)
+    run['model/summary'] = model.get_summary()
     # run['model/pretrained_model'] = model.summary()
     model = nn.DataParallel(model.cuda(), device_ids=[_config['gpu_id'],])
     model.train()
@@ -123,9 +124,9 @@ def main(_run, _config, _log):
         'num_workers': num_workers,
         'pin_memory': pin_memory,
         'drop_last': drop_last,
-        'optimizer': optimizer,
-        'scheduler': scheduler,
-        'criterion': criterion,
+        # 'optimizer': optimizer,
+        # 'scheduler': scheduler,
+        # 'criterion': criterion,
     }
 
     run['model/parameters'] = parameters

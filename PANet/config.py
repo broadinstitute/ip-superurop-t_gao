@@ -9,6 +9,17 @@ from sacred import Experiment
 from sacred.observers import FileStorageObserver
 from sacred.utils import apply_backspaces_and_linefeeds
 
+import neptune.new as neptune
+from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+from neptune.new.types import File
+
+# initialize Neptune.ai with API token
+with open('../../neptune-api-token.txt', 'r') as f:
+    run = neptune.init(
+        api_token=f.read(),
+        project='ip-superurop-tgao'
+    )
+
 sacred.SETTINGS['CONFIG']['READ_ONLY_CONFIG'] = False
 sacred.SETTINGS.CAPTURE_MODE = 'no'
 
@@ -28,8 +39,15 @@ def cfg():
     seed = 1234
     cuda_visable = '0, 1, 2, 3, 4, 5, 6, 7'
     gpu_id = 0
-    mode = 'train' # 'test' # 'train' or 'test'
+    mode = 'test' # 'train' or 'test'
 
+    parameters = {
+        'input_size': input_size,
+        'seed': seed,
+        'cuda_visable': cuda_visable,
+        'gpu_id': gpu_id,
+        'mode': mode,
+    }
 
     if mode == 'train':
         dataset = 'VOC'  # 'VOC' or 'COCO'
@@ -57,6 +75,21 @@ def cfg():
             'momentum': 0.9,
             'weight_decay': 0.0005,
         }
+
+        parameters.update({
+            'dataset': dataset,
+            'n_steps': n_steps,
+            'label_sets': label_sets,
+            'batch_size': batch_size,
+            'lr_milestones': lr_milestones,
+            'align_loss_scaler': align_loss_scaler,
+            'ignore_label': ignore_label,
+            'print_interval': print_interval,
+            'save_pred_every': save_pred_every,
+            'model': model,
+            'task': task,
+            'optim': optim,
+        })
 
     elif mode == 'test':
         notrain = False
@@ -91,6 +124,19 @@ def cfg():
             'n_queries': 1,
         }
 
+        parameters.update({
+            'n_runs': n_runs,
+            'n_steps': n_steps,
+            'batch_size': batch_size, 
+            'scribble_dilation': scribble_dilation,
+            'bbox': bbox,
+            'scribble': scribble,
+            'dataset': dataset,
+            'model': model,
+            'label_sets': label_sets,
+            'task': task,
+        })
+
     else:
         raise ValueError('Wrong configuration for "mode" !')
 
@@ -109,6 +155,11 @@ def cfg():
         'COCO':{'data_dir': '../../data/COCO/',
                 'data_split': 'train',},
     }
+
+    # log to Neptune
+    parameters['exp_str'] = exp_str
+    parameters['path'] = path
+    run['config/parameters'] = parameters
 
 @ex.config_hook
 def add_observer(config, command_name, logger):

@@ -32,6 +32,9 @@ class FewShotSeg(nn.Module):
         self.encoder = nn.Sequential(OrderedDict([
             ('backbone', Encoder(in_channels, self.pretrained_path)),]))
 
+    def get_summary(self):
+        return str(self.encoder)
+        # return self.encoder.summary()
 
     def forward(self, supp_imgs, fore_mask, back_mask, qry_imgs):
         """
