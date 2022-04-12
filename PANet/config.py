@@ -156,7 +156,9 @@ def cfg():
                'data_split': 'trainaug',},
         'COCO':{'data_dir': '../../data/COCO/',
                 'data_split': 'train',},
-        'HPA':{'data_dir': '../../data/HPA/',
+        'HPA':{'data_dir': '../../data/',
+                'rgb_dir': 'PgMbNr',
+                'grayscale_dir': 'Grayscale_Images',
                 'data_split': '/' }
     }
 

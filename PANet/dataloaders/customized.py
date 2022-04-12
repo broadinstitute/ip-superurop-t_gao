@@ -14,18 +14,6 @@ from .common import PairedDataset
 from .hpa import HPA
 
 
-def attrib_basic(_sample, class_id):
-    """
-    Add basic attribute
-
-    Args:
-        _sample: data sample
-        class_id: class label asscociated with the data
-            (sometimes indicting from which subset the data are drawn)
-    """
-    return {'class_id': class_id}
-
-
 def getMask(label, scribble, class_id, class_ids):
     """
     Generate FG/BG mask from the segmentation mask
@@ -259,11 +247,11 @@ def voc_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots,
     return paired_data
 
 
-def hpa_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots, max_iters, n_queries=1):
+def hpa_fewshot(base_dir, split, transforms, to_tensor, n_ways, n_shots, max_iters, n_queries=1):
     """
     Args:
         base_dir:
-            COCO dataset directory
+            HPA dataset directory
         split:
             which split to use
             choose from ('train', 'val')
@@ -283,20 +271,13 @@ def hpa_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots,
             number of query images
     """
 
-    # TODO: implement HPA function
     hpa = HPA(base_dir, split, transforms, to_tensor)
     hpa.add_attrib('basic', attrib_basic, {})
 
-    # TODO: see if cat_ids is necessary (see COCOSeg)
     # Load image ids for each class
-    sub_ids = []
-    # TODO: look into labeling process (see VOC dataset)
-    # for label in labels:
-    #     with open(os.path.join(voc._id_dir, voc.split,
-    #                            'class{}.txt'.format(label)), 'r') as f:
-    #         sub_ids.append(f.read().splitlines())
+    sub_ids = hpa.get_sub_ids()
+    labels = hpa.get_labels()
 
-    # TODO: compare COCOSeg and HPA for cat_ids vs cls_id
     # Create sub-datasets and add class_id attribute
     subsets = hpa.subsets(sub_ids, [{'basic': {'class_id': cls_id}} for cls_id in labels])
 

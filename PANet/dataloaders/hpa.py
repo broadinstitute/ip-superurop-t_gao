@@ -16,7 +16,7 @@ class HPA(BaseDataset):
 
     Args:
         base_dir:
-            HPA dataset directory
+            directory containing HPA and grayscale mask datasets
         split:
             which split to use
             choose from ('train', 'val', 'trainval', 'trainaug')
@@ -25,32 +25,35 @@ class HPA(BaseDataset):
         to_tensor:
             transformation to convert PIL Image to tensor
     """
-    def __init__(self, base_dir, split, transforms=None, to_tensor=None):
+    def __init__(self, base_dir, rgb_dir, grayscale_dir, split, transforms=None, to_tensor=None):
         super().__init__(base_dir)
         self.split = split
-        self._base_dir = base_dir
         self.transforms = transforms
         self.to_tensor = to_tensor
+        self.samples = {}
+        self.labels = {'all': set()}
+        self.sub_ids = []
 
-        self.ids = # TODO: set equal to filenames (without extensions) of images
-        #       for VOC, this looks at trainaug.txt (as data_split is set in config.py)
-        # TODO: delete the below (prior assignment from VOC pascal.py)
-        # with open(os.path.join(self._id_dir, f'{self.split}.txt'), 'r') as f:
-        #     self.ids = f.read().splitlines()
+        class_counter = 0
+        for class_dir in os.listdir(os.path.join(base_dir, rgb_dir)):
+            self.labels[class_counter] = set()
+            for img_file in os.list_dir(os.path.join(base_dir, rgb_dir, class_dir)):
+                self.labels['all'].add(img_file)
+                self.labels[class_counter].add(img_file)
+                self.sub_ids.append(img_file)
+
+                samples[img_file] = {
+                    'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
+                    'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
+                }
+            class_counter += 1
 
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, img_file):
         # Fetch data
-        id_ = self.ids[idx]
-        image = # TODO: fix given self._base_dir (as set in config.py, something like '../../data/HPA/') and id_ (image filename without extension); this should be the RGB image
-        semantic_mask = # TODO: similarly fix; this should be the grayscale mask
-        # TODO: delete the below (prior assignments from VOC pascal.py)
-        # image = Image.open(os.path.join(self._image_dir, f'{id_}.jpg'))
-        # semantic_mask = Image.open(os.path.join(self._label_dir, f'{id_}.png'))
-        sample = {'image': image,
-                  'label': semantic_mask}
+        sample = self.samples[img_file]
 
         # Image-level transformation
         if self.transforms is not None:
@@ -67,3 +70,9 @@ class HPA(BaseDataset):
         sample['image_t'] = image_t
 
         return sample
+
+    def get_labels(self):
+        return self.labels
+
+    def get_sub_ids(self):
+        return self.sub_ids[]

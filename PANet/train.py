@@ -62,11 +62,17 @@ def main(_run, _config, _log):
     data_name = _config['dataset']
     if data_name == 'VOC':
         make_data = voc_fewshot
+        labels = CLASS_LABELS[data_name][_config['label_sets']]
     elif data_name == 'COCO':
         make_data = coco_fewshot
+        labels = CLASS_LABELS[data_name][_config['label_sets']]
+    elif data_name == 'HPA':
+        make_data = hpa_fewshot
+        rgb_dir = _config['path'][data_name]['rgb_dir']
+        grayscale_dir = _config['path'][data_name]['grayscale_dir']
     else:
         raise ValueError('Wrong config for dataset!')
-    labels = CLASS_LABELS[data_name][_config['label_sets']]
+
     transforms = Compose([Resize(size=_config['input_size']),
                           RandomMirror()])
 
@@ -83,17 +89,31 @@ def main(_run, _config, _log):
     pin_memory = True
     drop_last = True
 
-    dataset = make_data(
-        base_dir=base_dir, # _config['path'][data_name]['data_dir'],
-        split=split, # _config['path'][data_name]['data_split'],
-        transforms=transforms,
-        to_tensor=to_tensor, # ToTensorNormalize(),
-        labels=labels,
-        max_iters=max_iters, # _config['n_steps'] * _config['batch_size'],
-        n_ways=n_ways, # _config['task']['n_ways'],
-        n_shots=n_shots, # _config['task']['n_shots'],
-        n_queries=n_queries # _config['task']['n_queries']
-    )
+    if data_name == 'HPA':
+        dataset = make_data(
+            base_dir=base_dir, # _config['path'][data_name]['data_dir'],
+            rgb_dir=rgb_dir,
+            grayscale_dir=grayscale_dir,
+            split=split, # _config['path'][data_name]['data_split'],
+            transforms=transforms,
+            to_tensor=to_tensor, # ToTensorNormalize(),
+            max_iters=max_iters, # _config['n_steps'] * _config['batch_size'],
+            n_ways=n_ways, # _config['task']['n_ways'],
+            n_shots=n_shots, # _config['task']['n_shots'],
+            n_queries=n_queries # _config['task']['n_queries']
+        )
+    else:
+        dataset = make_data(
+            base_dir=base_dir, # _config['path'][data_name]['data_dir'],
+            split=split, # _config['path'][data_name]['data_split'],
+            transforms=transforms,
+            to_tensor=to_tensor, # ToTensorNormalize(),
+            labels=labels,
+            max_iters=max_iters, # _config['n_steps'] * _config['batch_size'],
+            n_ways=n_ways, # _config['task']['n_ways'],
+            n_shots=n_shots, # _config['task']['n_shots'],
+            n_queries=n_queries # _config['task']['n_queries']
+        )
     trainloader = DataLoader(
         dataset,
         batch_size=_config['batch_size'],
