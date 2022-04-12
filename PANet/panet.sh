@@ -1,15 +1,8 @@
 #!/bin/bash
 #
-# chtc-test.sh
+# panet.sh
 #
 echo "Beginning CHTC Job $1"
-#
-#which git
-#whereis git
-#git --version
-#git --exec-path
-#whereis git
-#where is git
 #
 export NEPTUNE_API_TOKEN=`cat neptune-api-token.txt`
 #
@@ -22,29 +15,14 @@ mv dataloaders/ f1/f2/
 mv models/ f1/f2/
 #
 mkdir data/
-mkdir data/Pascal/
-unzip VOCdevkit.zip -d data/Pascal/ # -d VOCdevkit
+unzip PbMgNr.zip -d data/
+unzip Greyscale_Images.zip -d data/
 unzip pretrained_model.zip -d f1/f2/ # -d pretrained_model
-# ls -lt
-#ls -lt
-#echo "----------"
-#ls -lt VOCdevkit
-#echo "----------"
-#ls -lt pretrained_model
-#
-# docker system prune -a -f
 #
 cd f1/f2
-python3 train.py
+# python3 move_grayscale_under_ten.py
+# python3 generate_png_from_tiff.py
 #
-#mkdir donttransfer
-#FILES="*.hdf5
-#*.png"
-#for f in $FILES
-#do
-#  echo "processing file $f"
-#  cp $f $1_$(basename -- $f)
-#  mv $f donttransfer
-#done
+python3 train.py
 #
 echo "Finished CHTC Job $1"
