@@ -11,6 +11,7 @@ import numpy as np
 from .pascal import VOC
 from .coco import COCOSeg
 from .common import PairedDataset
+from .hpa import HPA
 
 
 def attrib_basic(_sample, class_id):
@@ -65,7 +66,7 @@ def getMask(label, scribble, class_id, class_ids):
             'bg_scribble': bg_scribble.long()}
 
 
-def fewShot(paired_sample, n_ways, n_shots, cnt_query, coco=False):
+def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC'):
     """
     Postprocess paired sample for fewshot settings
 
@@ -78,8 +79,8 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, coco=False):
             n-shot few-shot learning
         cnt_query:
             number of query images for each class in the support set
-        coco:
-            MS COCO dataset
+        dataset:
+            VOC, COCO, or HPA
     """
     ###### Compose the support and query image list ######
     cumsum_idx = np.cumsum([0,] + [n_shots + x for x in cnt_query])
@@ -94,7 +95,7 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, coco=False):
                         for i in range(n_ways)]
 
     # support image labels
-    if coco:
+    if dataset == 'COCO':
         support_labels = [[paired_sample[cumsum_idx[i] + j]['label'][class_ids[i]]
                            for j in range(n_shots)] for i in range(n_ways)]
     else:
@@ -166,8 +167,52 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, coco=False):
            }
 
 
-def voc_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots, max_iters,
-                n_queries=1):
+def coco_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots, max_iters, n_queries=1):
+    """
+    Args:
+        base_dir:
+            COCO dataset directory
+        split:
+            which split to use
+            choose from ('train', 'val')
+        transform:
+            transformations to be performed on images/masks
+        to_tensor:
+            transformation to convert PIL Image to tensor
+        labels:
+            labels of the data
+        n_ways:
+            n-way few-shot learning, should be no more than # of labels
+        n_shots:
+            n-shot few-shot learning
+        max_iters:
+            number of pairs
+        n_queries:
+            number of query images
+    """
+    cocoseg = COCOSeg(base_dir, split, transforms, to_tensor)
+    cocoseg.add_attrib('basic', attrib_basic, {})
+
+    # Load image ids for each class
+    cat_ids = cocoseg.coco.getCatIds()
+    sub_ids = [cocoseg.coco.getImgIds(catIds=cat_ids[i - 1]) for i in labels]
+    # Create sub-datasets and add class_id attribute
+    subsets = cocoseg.subsets(sub_ids, [{'basic': {'class_id': cat_ids[i - 1]}} for i in labels])
+
+    # Choose the classes of queries
+    cnt_query = np.bincount(random.choices(population=range(n_ways), k=n_queries),
+                            minlength=n_ways)
+    # Set the number of images for each class
+    n_elements = [n_shots + x for x in cnt_query]
+    # Create paired dataset
+    paired_data = PairedDataset(subsets, n_elements=n_elements, max_iters=max_iters, same=False,
+                                pair_based_transforms=[
+                                    (fewShot, {'n_ways': n_ways, 'n_shots': n_shots,
+                                               'cnt_query': cnt_query, 'coco': True})])
+    return paired_data
+
+
+def voc_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots, max_iters, n_queries=1):
     """
     Args:
         base_dir:
@@ -214,8 +259,7 @@ def voc_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots,
     return paired_data
 
 
-def coco_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots, max_iters,
-                 n_queries=1):
+def hpa_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots, max_iters, n_queries=1):
     """
     Args:
         base_dir:
@@ -238,23 +282,43 @@ def coco_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots
         n_queries:
             number of query images
     """
-    cocoseg = COCOSeg(base_dir, split, transforms, to_tensor)
-    cocoseg.add_attrib('basic', attrib_basic, {})
 
+    # TODO: implement HPA function
+    hpa = HPA(base_dir, split, transforms, to_tensor)
+    hpa.add_attrib('basic', attrib_basic, {})
+
+    # TODO: see if cat_ids is necessary (see COCOSeg)
     # Load image ids for each class
-    cat_ids = cocoseg.coco.getCatIds()
-    sub_ids = [cocoseg.coco.getImgIds(catIds=cat_ids[i - 1]) for i in labels]
+    sub_ids = []
+    # TODO: look into labeling process (see VOC dataset)
+    # for label in labels:
+    #     with open(os.path.join(voc._id_dir, voc.split,
+    #                            'class{}.txt'.format(label)), 'r') as f:
+    #         sub_ids.append(f.read().splitlines())
+
+    # TODO: compare COCOSeg and HPA for cat_ids vs cls_id
     # Create sub-datasets and add class_id attribute
-    subsets = cocoseg.subsets(sub_ids, [{'basic': {'class_id': cat_ids[i - 1]}} for i in labels])
+    subsets = hpa.subsets(sub_ids, [{'basic': {'class_id': cls_id}} for cls_id in labels])
 
     # Choose the classes of queries
-    cnt_query = np.bincount(random.choices(population=range(n_ways), k=n_queries),
-                            minlength=n_ways)
+    cnt_query = np.bincount(random.choices(population=range(n_ways), k=n_queries), minlength=n_ways)
+
     # Set the number of images for each class
     n_elements = [n_shots + x for x in cnt_query]
+
     # Create paired dataset
-    paired_data = PairedDataset(subsets, n_elements=n_elements, max_iters=max_iters, same=False,
-                                pair_based_transforms=[
-                                    (fewShot, {'n_ways': n_ways, 'n_shots': n_shots,
-                                               'cnt_query': cnt_query, 'coco': True})])
+    paired_data = PairedDataset(
+        subsets,
+        n_elements,
+        max_iters,
+        same=False,
+        pair_based_transforms=[(
+            fewShot, {
+                'n_ways': n_ways,
+                'n_shots': n_shots,
+                'cnt_query': cnt_query
+            }
+        )]
+    )
+
     return paired_data

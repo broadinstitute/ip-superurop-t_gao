@@ -53,6 +53,7 @@ def main(_run, _config, _log):
     run['model/summary'] = model.get_summary()
     # run['model/pretrained_model'] = model.summary()
     model = nn.DataParallel(model.cuda(), device_ids=[_config['gpu_id'],])
+    run['model/summary'] = model.get_summary()
     model.train()
 
     # run['model/saved_model'] = model.module.summary()
@@ -74,7 +75,7 @@ def main(_run, _config, _log):
     to_tensor = ToTensorNormalize()
     max_iters = _config['n_steps'] * _config['batch_size']
     n_ways = _config['task']['n_ways']
-    n_shots = 5 # TODO # _config['task']['n_shots']
+    n_shots = _config['task']['n_shots']
     n_queries = _config['task']['n_queries']
     batch_size = _config['batch_size']
     shuffle = True
