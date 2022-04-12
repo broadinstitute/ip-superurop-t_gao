@@ -50,7 +50,7 @@ def cfg():
     }
 
     if mode == 'train':
-        dataset = 'VOC'  # 'VOC' or 'COCO'
+        dataset = 'HPA'  # 'VOC' or 'COCO' or 'HPA'
         n_steps = 30000
         label_sets = 0
         batch_size = 1
@@ -66,7 +66,7 @@ def cfg():
 
         task = {
             'n_ways': 1,
-            'n_shots': 1,
+            'n_shots': 1, # TODO: toggle between 1 and 5
             'n_queries': 1,
         }
 
@@ -93,7 +93,7 @@ def cfg():
 
     elif mode == 'test':
         notrain = False
-        snapshot = './runs/PANet_VOC_sets_0_1way_1shot_[train]/1/snapshots/30000.pth'
+        snapshot = './runs/PANet_HPA_sets_0_1way_1shot_[train]/1/snapshots/30000.pth'
         n_runs = 5
         n_steps = 1000
         batch_size = 1
@@ -106,6 +106,8 @@ def cfg():
             dataset = 'VOC'
         elif 'COCO' in snapshot:
             dataset = 'COCO'
+        elif 'HPA' in snapshot:
+            dataset = 'HPA'
         else:
             raise ValueError('Wrong snapshot name !')
 
@@ -154,6 +156,10 @@ def cfg():
                'data_split': 'trainaug',},
         'COCO':{'data_dir': '../../data/COCO/',
                 'data_split': 'train',},
+        'HPA':{'data_dir': '../../data/',
+                'rgb_dir': 'PgMbNr',
+                'grayscale_dir': 'Grayscale_Images',
+                'data_split': '/' }
     }
 
     # log to Neptune
