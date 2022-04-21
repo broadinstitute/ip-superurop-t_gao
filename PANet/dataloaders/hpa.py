@@ -36,16 +36,35 @@ class HPA(BaseDataset):
 
         class_counter = 0
         for class_dir in os.listdir(os.path.join(base_dir, rgb_dir)):
+            if class_dir == '.DS_Store':
+                continue
             self.labels[class_counter] = set()
-            for img_file in os.list_dir(os.path.join(base_dir, rgb_dir, class_dir)):
+            class_sub_ids = []
+            for img_file in os.listdir(os.path.join(base_dir, rgb_dir, class_dir)):
+                if img_file == '.DS_Store':
+                    # print('IMAGE FILE IS DS_STORE, so continuing')
+                    continue
+                # print('image file', img_file, 'is NOT DS_Store')
+
+                # TODO: debug why generate_png_from_tiff is not converting every image! (not running to completion)
+                try:
+                    img_file_dict = {
+                        'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
+                        'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
+                    }
+                except FileNotFoundError:
+                    continue
+
                 self.labels['all'].add(img_file)
                 self.labels[class_counter].add(img_file)
-                self.sub_ids.append(img_file)
+                class_sub_ids.append(img_file)
+                self.samples[img_file] = img_file_dict
 
-                samples[img_file] = {
-                    'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
-                    'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
-                }
+                # self.samples[img_file] = {
+                #     'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
+                #     'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
+                # }
+            self.sub_ids.append(class_sub_ids)
             class_counter += 1
 
     def __len__(self):
@@ -75,4 +94,4 @@ class HPA(BaseDataset):
         return self.labels
 
     def get_sub_ids(self):
-        return self.sub_ids[]
+        return self.sub_ids

@@ -17,3 +17,4 @@ PANet/VOCdevkit/
 PANet/outputs/
 */VOCdevkit.zip
 */pretrained_model.zip
+*/*_png.zip

@@ -14,6 +14,17 @@ from .common import PairedDataset
 from .hpa import HPA
 
 
+def attrib_basic(_sample, class_id):
+    """
+    Add basic attribute
+    Args:
+        _sample: data sample
+        class_id: class label asscociated with the data
+            (sometimes indicting from which subset the data are drawn)
+    """
+    return {'class_id': class_id}
+
+
 def getMask(label, scribble, class_id, class_ids):
     """
     Generate FG/BG mask from the segmentation mask
@@ -247,7 +258,7 @@ def voc_fewshot(base_dir, split, transforms, to_tensor, labels, n_ways, n_shots,
     return paired_data
 
 
-def hpa_fewshot(base_dir, split, transforms, to_tensor, n_ways, n_shots, max_iters, n_queries=1):
+def hpa_fewshot(base_dir, grayscale_dir, rgb_dir, split, transforms, to_tensor, n_ways, n_shots, max_iters, n_queries=1):
     """
     Args:
         base_dir:
@@ -271,15 +282,18 @@ def hpa_fewshot(base_dir, split, transforms, to_tensor, n_ways, n_shots, max_ite
             number of query images
     """
 
-    hpa = HPA(base_dir, split, transforms, to_tensor)
+    hpa = HPA(base_dir, grayscale_dir, rgb_dir, split, transforms, to_tensor)
     hpa.add_attrib('basic', attrib_basic, {})
 
     # Load image ids for each class
     sub_ids = hpa.get_sub_ids()
     labels = hpa.get_labels()
+    print('sub_ids', sub_ids) # TODO: delete me
+    # print('labels', labels) # TODO: delete me
 
     # Create sub-datasets and add class_id attribute
-    subsets = hpa.subsets(sub_ids, [{'basic': {'class_id': cls_id}} for cls_id in labels])
+    subsets = hpa.subsets(sub_ids)
+    # subsets = hpa.subsets(sub_ids, [{'basic': {'class_id': cls_id}} for cls_id in labels])
 
     # Choose the classes of queries
     cnt_query = np.bincount(random.choices(population=range(n_ways), k=n_queries), minlength=n_ways)

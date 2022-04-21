@@ -11,10 +11,10 @@ import torch.backends.cudnn as cudnn
 from torchvision.transforms import Compose
 
 from models.fewshot import FewShotSeg
-from dataloaders.customized import voc_fewshot, coco_fewshot
+from dataloaders.customized import hpa_fewshot, voc_fewshot, coco_fewshot
 from dataloaders.transforms import RandomMirror, Resize, ToTensorNormalize
 from util.utils import set_seed, CLASS_LABELS
-from config import ex
+from config import ex, run
 
 from keras.models import load_model
 
@@ -22,12 +22,12 @@ import neptune.new as neptune
 from neptune.new.integrations.tensorflow_keras import NeptuneCallback
 from neptune.new.types import File
 
-# initialize Neptune.ai with API token
-with open('../../neptune-api-token.txt', 'r') as f:
-    run = neptune.init(
-        api_token=f.read(),
-        project='ip-superurop-tgao'
-    )
+# # initialize Neptune.ai with API token
+# with open('../../neptune-api-token.txt', 'r') as f:
+#     run = neptune.init(
+#         api_token=f.read(),
+#         project='ip-superurop-tgao'
+#     )
 
 @ex.automain
 def main(_run, _config, _log):
@@ -53,7 +53,7 @@ def main(_run, _config, _log):
     run['model/summary'] = model.get_summary()
     # run['model/pretrained_model'] = model.summary()
     model = nn.DataParallel(model.cuda(), device_ids=[_config['gpu_id'],])
-    run['model/summary'] = model.get_summary()
+    # run['model/summary'] = model.get_summary()
     model.train()
 
     # run['model/saved_model'] = model.module.summary()
