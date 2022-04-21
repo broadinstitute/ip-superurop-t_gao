@@ -6,7 +6,7 @@
 #  your job. Wherever you see $(Cluster), HTCondor will insert the
 #  queue number assigned to this set of jobs at the time of submission.
 universe = docker
-docker_image = teresahgao/superurop-panet
+docker_image = teresahgao/superurop-panet:latest
 log = outputs/$(Cluster).log
 #
 # Specify your executable (single binary or a script that runs several
@@ -24,7 +24,7 @@ error = outputs/$(Cluster).err
 #  used if there were any other files needed for the executable to use.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = train.py,neptune-api-token.txt,config.py,util/,dataloaders/,models/,VOCdevkit.zip,pretrained_model.zip
+transfer_input_files = train.py,neptune-api-token.txt,config.py,util/,dataloaders/,models/,pretrained_model.zip,PbMgNr_png.zip,Greyscale_Images_png.zip
 preserve_relative_paths = True
 #
 # Tell HTCondor what amount of compute resources

@@ -35,7 +35,7 @@ for source_file in sources_to_save:
 @ex.config
 def cfg():
     """Default configurations"""
-    input_size = (417, 417)
+    input_size = (256, 256)
     seed = 1234
     cuda_visable = '0, 1, 2, 3, 4, 5, 6, 7'
     gpu_id = 0
@@ -157,8 +157,8 @@ def cfg():
         'COCO':{'data_dir': '../../data/COCO/',
                 'data_split': 'train',},
         'HPA':{'data_dir': '../../data/',
-                'rgb_dir': 'PgMbNr',
-                'grayscale_dir': 'Grayscale_Images',
+                'rgb_dir': 'PbMgNr_png',
+                'grayscale_dir': 'Greyscale_Images_png',
                 'data_split': '/' }
     }
 
