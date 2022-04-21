@@ -10,8 +10,8 @@
 
 ## HPA
 
-1. Zip and transfer `Greyscale_Images`, `PbMgNr` (or whatever other RGB versions of the images are being used), and `pretrained_model.zip` to `.` (`superurop/PANet/`).
-2. Run `bash prep_data.sh`. *This only needs to be run once, after the initial transfer of zipped data files to CHTC via SCP.*
+1. Run `generate_png_from_tiff.py` locally.
+2. Zip and transfer `Greyscale_Images_png`, `PbMgNr_png` (or whatever other RGB versions of the images are being used), and `pretrained_model.zip` to `.` (`superurop/PANet/`).
 3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet.sub`.
 
 # PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment (README adapted from [original repo by Wang et al.](https://github.com/kaixin96/PANet)
