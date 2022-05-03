@@ -32,6 +32,7 @@ class HPA(BaseDataset):
         self.to_tensor = to_tensor
         self.samples = {}
         self.labels = {'all': set()}
+        self.ids = []
         self.sub_ids = []
 
         class_counter = 0
@@ -42,21 +43,31 @@ class HPA(BaseDataset):
             class_sub_ids = []
             for img_file in os.listdir(os.path.join(base_dir, rgb_dir, class_dir)):
                 if img_file == '.DS_Store':
-                    # print('IMAGE FILE IS DS_STORE, so continuing')
                     continue
-                # print('image file', img_file, 'is NOT DS_Store')
 
-                # TODO: debug why generate_png_from_tiff is not converting every image! (not running to completion)
+                # try:
+                #     img_file_dict = {
+                #         'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
+                #         'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
+                #     }
+                # except FileNotFoundError:
+                #     continue
                 try:
-                    img_file_dict = {
-                        'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
-                        'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
-                    }
+                    image = Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file))
                 except FileNotFoundError:
                     continue
+                try:
+                    label = Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
+                except FileNotFoundError:
+                    continue
+                img_file_dict = {
+                    'image': image,
+                    'label': label
+                }
 
                 self.labels['all'].add(img_file)
                 self.labels[class_counter].add(img_file)
+                self.ids.append(img_file)
                 class_sub_ids.append(img_file)
                 self.samples[img_file] = img_file_dict
 
@@ -70,8 +81,9 @@ class HPA(BaseDataset):
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self, img_file):
+    def __getitem__(self, idx):
         # Fetch data
+        img_file = self.ids[idx]
         sample = self.samples[img_file]
 
         # Image-level transformation
@@ -85,7 +97,7 @@ class HPA(BaseDataset):
         if self.to_tensor is not None:
             sample = self.to_tensor(sample)
 
-        sample['id'] = id_
+        sample['id'] = img_file
         sample['image_t'] = image_t
 
         return sample
