@@ -288,7 +288,7 @@ def hpa_fewshot(base_dir, grayscale_dir, rgb_dir, split, transforms, to_tensor, 
     # Load image ids for each class
     sub_ids = hpa.get_sub_ids()
     labels = hpa.get_labels()
-    print('sub_ids', sub_ids) # TODO: delete me
+    # print('sub_ids', sub_ids) # TODO: delete me
     # print('labels', labels) # TODO: delete me
 
     # Create sub-datasets and add class_id attribute
@@ -316,4 +316,4 @@ def hpa_fewshot(base_dir, grayscale_dir, rgb_dir, split, transforms, to_tensor, 
         )]
     )
 
-    return paired_data
+    return paired_data, labels

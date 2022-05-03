@@ -86,10 +86,31 @@ class ToTensorNormalize(object):
     Scale images' pixel values to [0-1] and normalize with predefined statistics
     """
     def __call__(self, sample):
+        print('ENTERED CALL OF TOTENSORNORMALIZE')
+
         img, label = sample['image'], sample['label']
         inst, scribble = sample['inst'], sample['scribble']
-        img = tr_F.to_tensor(img)
-        img = tr_F.normalize(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        
+        try:
+            img = tr_F.to_tensor(img)
+        except TypeError:
+            img = tr_F.pil_to_tensor(img)
+        
+        # ensure 3 channels
+        print('NUMBER OF CHANNELS', np.shape(img))
+        if np.shape(img)[0] == 1:
+            print('\npre-stack', img)
+            img = np.stack((img,)*3, axis=-1)
+            print('\npost-stack', img)
+            img = torch.from_numpy(img)
+
+        print('SHAPE OF IMAGE', list(img.size()))
+        # try:
+        #     img = tr_F.normalize(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        # except TypeError:
+        #     img = tr_F.normalize(img.float(), mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        img = tr_F.normalize(img.float(), mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
         if isinstance(label, dict):
             label = {catId: torch.Tensor(np.array(x)).long()
                      for catId, x in label.items()}
