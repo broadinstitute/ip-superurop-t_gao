@@ -16,7 +16,7 @@ mv dataloaders/ f1/f2/
 mv models/ f1/f2/
 #
 mkdir data/
-unzip PbMgNr_png.zip -d data/
+unzip PbMgNr_jpg.zip -d data/
 unzip Greyscale_Images_png.zip -d data/
 unzip pretrained_model.zip -d f1/f2/ # -d pretrained_model
 echo "unzipped all ZIP files"

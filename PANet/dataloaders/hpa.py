@@ -63,26 +63,15 @@ class HPA(BaseDataset):
                 except FileNotFoundError:
                     continue
 
-                # label = np.stack((label,)*3, axis=-1) # label = label.convert('RGB') # to ensure 3 channels
-
-                #print('IMAGE TYPE', type(image))
-                #print('LABEL TYPE', type(label))
-                #image = np.array(image)
-                #label = np.array(label)
-                #print('IMAGE ARRAY', image)
-                #print('LABEL ARRAY', label)
-                #image = tv_transforms.ToTensor()(image).unsqueeze_(0) # np.array(image) #image.float() # .to(dtype='float')
-                #label = tv_transforms.ToTensor()(label).unsqueeze_(0) # np.array(label) #label.float() # .to(dtype='float')
+                label = label.convert('L')
 
                 # No scribble/instance mask
                 img_dimensions = (256, 256) # TODO: link to config
                 img_as_zeros = np.zeros(img_dimensions) #, dtype=np.uint8)
-                # img_as_zeros = img_as_zeros.astype(np.uint8)
-                #print('img_as_zeros', img_as_zeros)
-                # instance_mask = Image.fromarray(img_as_zeros) #, dtype='uint8'))
-                # scribble_mask = Image.fromarray(img_as_zeros) #, dtype='uint8'))
                 instance_mask = Image.fromarray(np.zeros(img_dimensions, dtype='uint8'))
                 scribble_mask = Image.fromarray(np.zeros(img_dimensions, dtype='uint8'))
+                instance_mask = instance_mask.convert('P') #, instance_mask)
+                scribble_mask = scribble_mask.convert('P') #, scribble_mask)
 
                 img_file_dict = {
                     'image': image,
@@ -97,10 +86,6 @@ class HPA(BaseDataset):
                 class_sub_ids.append(img_file)
                 self.samples[img_file] = img_file_dict
 
-                # self.samples[img_file] = {
-                #     'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
-                #     'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
-                # }
             self.sub_ids.append(class_sub_ids)
             class_counter += 1
 

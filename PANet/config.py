@@ -157,7 +157,7 @@ def cfg():
         'COCO':{'data_dir': '../../data/COCO/',
                 'data_split': 'train',},
         'HPA':{'data_dir': '../../data/',
-                'rgb_dir': 'PbMgNr_png',
+                'rgb_dir': 'PbMgNr_jpg',
                 'grayscale_dir': 'Greyscale_Images_png',
                 'data_split': '/' }
     }
