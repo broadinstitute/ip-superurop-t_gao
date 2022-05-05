@@ -70,6 +70,7 @@ def main(_run, _config, _log):
         make_data = hpa_fewshot
         rgb_dir = _config['path'][data_name]['rgb_dir']
         grayscale_dir = _config['path'][data_name]['grayscale_dir']
+        # labels defined below
     else:
         raise ValueError('Wrong config for dataset!')
 
@@ -90,7 +91,7 @@ def main(_run, _config, _log):
     drop_last = True
 
     if data_name == 'HPA':
-        dataset = make_data(
+        dataset, labels = make_data(
             base_dir=base_dir, # _config['path'][data_name]['data_dir'],
             rgb_dir=rgb_dir,
             grayscale_dir=grayscale_dir,
