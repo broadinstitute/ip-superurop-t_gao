@@ -93,8 +93,8 @@ def main(_run, _config, _log):
     if data_name == 'HPA':
         dataset, labels = make_data(
             base_dir=base_dir, # _config['path'][data_name]['data_dir'],
-            rgb_dir=rgb_dir,
             grayscale_dir=grayscale_dir,
+            rgb_dir=rgb_dir,
             split=split, # _config['path'][data_name]['data_split'],
             transforms=transforms,
             to_tensor=to_tensor, # ToTensorNormalize(),

@@ -26,7 +26,7 @@ class HPA(BaseDataset):
         to_tensor:
             transformation to convert PIL Image to tensor
     """
-    def __init__(self, base_dir, rgb_dir, grayscale_dir, split, transforms=None, to_tensor=None):
+    def __init__(self, base_dir, grayscale_dir, rgb_dir, split, transforms=None, to_tensor=None):
         super().__init__(base_dir)
         self.split = split
         self.transforms = transforms
@@ -45,21 +45,13 @@ class HPA(BaseDataset):
             for img_file in os.listdir(os.path.join(base_dir, rgb_dir, class_dir)):
                 if img_file == '.DS_Store':
                     continue
-
-                # try:
-                #     img_file_dict = {
-                #         'image': Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file)),
-                #         'label': Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
-                #     }
-                # except FileNotFoundError:
-                #     continue
                 try:
                     image = Image.open(os.path.join(base_dir, rgb_dir, class_dir, img_file))
                 except FileNotFoundError:
                     continue
 
                 try:
-                    label = Image.open(os.path.join(base_dir, grayscale_dir, class_dir, img_file))
+                    label = Image.open(os.path.join(base_dir, grayscale_dir, class_dir, os.path.splitext(img_file)[0] + '.png'))
                 except FileNotFoundError:
                     continue
 
