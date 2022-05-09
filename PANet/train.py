@@ -22,6 +22,9 @@ import neptune.new as neptune
 from neptune.new.integrations.tensorflow_keras import NeptuneCallback
 from neptune.new.types import File
 
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 # # initialize Neptune.ai with API token
 # with open('../../neptune-api-token.txt', 'r') as f:
 #     run = neptune.init(
