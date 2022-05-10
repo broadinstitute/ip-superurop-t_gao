@@ -32,7 +32,7 @@ class HPA(BaseDataset):
         self.transforms = transforms
         self.to_tensor = to_tensor
         self.samples = {}
-        self.labels = {'all': set()}
+        self.labels = {} # {'all': set()}
         self.ids = []
         self.sub_ids = []
 
@@ -69,10 +69,11 @@ class HPA(BaseDataset):
                     'image': image,
                     'label': label,
                     'inst': instance_mask,
-                    'scribble': scribble_mask
+                    'scribble': scribble_mask,
+                    'basic_class_id': class_counter,
                 }
 
-                self.labels['all'].add(img_file)
+                # self.labels['all'].add(img_file)
                 self.labels[class_counter].add(img_file)
                 self.ids.append(img_file)
                 class_sub_ids.append(img_file)

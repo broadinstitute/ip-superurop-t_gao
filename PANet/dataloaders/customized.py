@@ -65,7 +65,7 @@ def getMask(label, scribble, class_id, class_ids):
             'bg_scribble': bg_scribble.long()}
 
 
-def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC'):
+def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC', coco=False):
     """
     Postprocess paired sample for fewshot settings
 
@@ -81,17 +81,26 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC'):
         dataset:
             VOC, COCO, or HPA
     """
+    print('====================')
+    print('in fewShot() in dataloaders/customized.py')
+
+    print('paired_sample', paired_sample)
+
     ###### Compose the support and query image list ######
     cumsum_idx = np.cumsum([0,] + [n_shots + x for x in cnt_query])
+    print('cumsum_idx', cumsum_idx)
 
     # support class ids
     class_ids = [paired_sample[cumsum_idx[i]]['basic_class_id'] for i in range(n_ways)]
+    # class_ids = [paired_sample[cumsum_idx[i]]['basic_class_id'] for i in range(n_ways)]
+    print('class_ids', class_ids)
 
     # support images
     support_images = [[paired_sample[cumsum_idx[i] + j]['image'] for j in range(n_shots)]
                       for i in range(n_ways)]
-    support_images_t = [[paired_sample[cumsum_idx[i] + j]['image_t'] for j in range(n_shots)]
-                        for i in range(n_ways)]
+    print('support_images', support_images)
+    # support_images_t = [[paired_sample[cumsum_idx[i] + j]['image_t'] for j in range(n_shots)] for i in range(n_ways)]
+    # print('support_images_t', support_images_t)
 
     # support image labels
     if dataset == 'COCO':
@@ -100,18 +109,20 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC'):
     else:
         support_labels = [[paired_sample[cumsum_idx[i] + j]['label'] for j in range(n_shots)]
                           for i in range(n_ways)]
+    print('support_labels', support_labels)
     support_scribbles = [[paired_sample[cumsum_idx[i] + j]['scribble'] for j in range(n_shots)]
                          for i in range(n_ways)]
+    print('support_scribbles', support_scribbles)
     support_insts = [[paired_sample[cumsum_idx[i] + j]['inst'] for j in range(n_shots)]
                      for i in range(n_ways)]
+    print('support_insts', support_insts)
 
 
 
     # query images, masks and class indices
     query_images = [paired_sample[cumsum_idx[i+1] - j - 1]['image'] for i in range(n_ways)
                     for j in range(cnt_query[i])]
-    query_images_t = [paired_sample[cumsum_idx[i+1] - j - 1]['image_t'] for i in range(n_ways)
-                      for j in range(cnt_query[i])]
+    # query_images_t = [paired_sample[cumsum_idx[i+1] - j - 1]['image_t'] for i in range(n_ways) for j in range(cnt_query[i])]
     if coco:
         query_labels = [paired_sample[cumsum_idx[i+1] - j - 1]['label'][class_ids[i]]
                         for i in range(n_ways) for j in range(cnt_query[i])]
@@ -153,12 +164,12 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC'):
 
     return {'class_ids': class_ids,
 
-            'support_images_t': support_images_t,
+            # 'support_images_t': support_images_t,
             'support_images': support_images,
             'support_mask': support_mask,
             'support_inst': support_insts,
 
-            'query_images_t': query_images_t,
+            # 'query_images_t': query_images_t,
             'query_images': query_images,
             'query_labels': query_labels_tmp,
             'query_masks': query_masks,
@@ -292,8 +303,8 @@ def hpa_fewshot(base_dir, grayscale_dir, rgb_dir, split, transforms, to_tensor, 
     # print('labels', labels) # TODO: delete me
 
     # Create sub-datasets and add class_id attribute
-    subsets = hpa.subsets(sub_ids)
-    # subsets = hpa.subsets(sub_ids, [{'basic': {'class_id': cls_id}} for cls_id in labels])
+    # subsets = hpa.subsets(sub_ids)
+    subsets = hpa.subsets(sub_ids, [{'basic': {'class_id': cls_id}} for cls_id in labels])
 
     # Choose the classes of queries
     cnt_query = np.bincount(random.choices(population=range(n_ways), k=n_queries), minlength=n_ways)
