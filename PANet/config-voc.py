@@ -50,7 +50,7 @@ def cfg():
     }
 
     if mode == 'train':
-        dataset = 'HPA'  # 'VOC' or 'COCO' or 'HPA'
+        dataset = 'VOC' # TODO: toggle back to 'HPA'  # 'VOC' or 'COCO' or 'HPA'
         n_steps = 30000
         label_sets = 0
         batch_size = 1

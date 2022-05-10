@@ -14,7 +14,7 @@ log = outputs/$(Cluster).log
 #  output (or "screen output").
 #  $(Process) will be a integer number for each job, starting with "0"
 #  and increasing for the relevant number of jobs.
-executable = panet.sh
+executable = panet-voc.sh
 arguments = $(Cluster)
 output = outputs/$(Cluster).out
 error = outputs/$(Cluster).err
@@ -24,7 +24,7 @@ error = outputs/$(Cluster).err
 #  used if there were any other files needed for the executable to use.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = train.py,neptune-api-token.txt,config.py,util/,dataloaders/,models/,pretrained_model.zip,PbMgNr_jpg.zip,Greyscale_Images_png.zip
+transfer_input_files = train.py,neptune-api-token.txt,config-voc.py,util/,dataloaders/,models/,VOCdevkit.zip,pretrained_model.zip
 preserve_relative_paths = True
 #
 # Tell HTCondor what amount of compute resources
