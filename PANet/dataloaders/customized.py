@@ -81,63 +81,130 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC', coco=False
         dataset:
             VOC, COCO, or HPA
     """
-    print('====================')
-    print('in fewShot() in dataloaders/customized.py')
 
-    print('paired_sample', paired_sample)
 
     ###### Compose the support and query image list ######
     cumsum_idx = np.cumsum([0,] + [n_shots + x for x in cnt_query])
-    print('cumsum_idx', cumsum_idx)
 
     # support class ids
-    class_ids = [paired_sample[cumsum_idx[i]]['basic_class_id'] for i in range(n_ways)]
     # class_ids = [paired_sample[cumsum_idx[i]]['basic_class_id'] for i in range(n_ways)]
-    print('class_ids', class_ids)
+    class_ids = []
+    for i in range(n_ways):
+        try:
+            class_ids.append(paired_sample[cumsum_idx[i]]['basic_class_id'])
+        except TypeError:
+            continue
+    # class_ids = [paired_sample[cumsum_idx[i]]['basic_class_id'] for i in range(n_ways)]
 
     # support images
-    support_images = [[paired_sample[cumsum_idx[i] + j]['image'] for j in range(n_shots)]
-                      for i in range(n_ways)]
-    print('support_images', support_images)
+    support_images = []
+    for i in range(n_ways):
+        support_images_entry = []
+        for j in range(n_shots):
+            try:
+                support_images_entry.append(paired_sample[cumsum_idx[i] + j]['image'])
+            except TypeError:
+                continue
+            support_images.append(support_images_entry)
+    # support_images = [[paired_sample[cumsum_idx[i] + j]['image'] for j in range(n_shots)] for i in range(n_ways)]
     # support_images_t = [[paired_sample[cumsum_idx[i] + j]['image_t'] for j in range(n_shots)] for i in range(n_ways)]
-    # print('support_images_t', support_images_t)
 
     # support image labels
     if dataset == 'COCO':
         support_labels = [[paired_sample[cumsum_idx[i] + j]['label'][class_ids[i]]
                            for j in range(n_shots)] for i in range(n_ways)]
     else:
-        support_labels = [[paired_sample[cumsum_idx[i] + j]['label'] for j in range(n_shots)]
-                          for i in range(n_ways)]
-    print('support_labels', support_labels)
-    support_scribbles = [[paired_sample[cumsum_idx[i] + j]['scribble'] for j in range(n_shots)]
-                         for i in range(n_ways)]
-    print('support_scribbles', support_scribbles)
-    support_insts = [[paired_sample[cumsum_idx[i] + j]['inst'] for j in range(n_shots)]
-                     for i in range(n_ways)]
-    print('support_insts', support_insts)
+        support_labels = []
+        for i in range(n_ways):
+            support_labels_entry = []
+            for j in range(n_shots):
+                try:
+                    support_labels_entry.append(paired_sample[cumsum_idx[i] + j]['label'])
+                except TypeError:
+                    continue
+            support_labels_entry.append(support_labels)
+        # support_labels = [[paired_sample[cumsum_idx[i] + j]['label'] for j in range(n_shots)] for i in range(n_ways)]
+    
+    support_scribbles = []
+    for i in range(n_ways):
+        support_scribbles_entry = []
+        for j in range(n_shots):
+            try:
+                support_scribbles_entry.append(paired_sample[cumsum_idx[i] + j]['scribble'])
+            except TypeError:
+                continue
+        support_scribbles.append(support_scribbles_entry)
+    #support_scribbles = [[paired_sample[cumsum_idx[i] + j]['scribble'] for j in range(n_shots)] for i in range(n_ways)]
+
+    support_insts = []
+    for i in range(n_ways):
+        support_insts_entry = []
+        for j in range(n_shots):
+            try:
+                support_insts_entry.append(paired_sample[cumsum_idx[i] + j]['inst'])
+            except TypeError:
+                continue
+        support_insts.append(support_insts_entry) 
+    # support_insts = [[paired_sample[cumsum_idx[i] + j]['inst'] for j in range(n_shots)] for i in range(n_ways)]
 
 
 
     # query images, masks and class indices
-    query_images = [paired_sample[cumsum_idx[i+1] - j - 1]['image'] for i in range(n_ways)
-                    for j in range(cnt_query[i])]
+    query_images = []
+    for i in range(n_ways):
+        for j in range(cnt_query[i]):
+            query_image_index = cumsum_idx[i+1] - j - 1
+            query_sample = paired_sample[query_image_index]
+            if query_sample is None:
+                continue
+            query_image = query_sample['image']
+            if query_image is None:
+                continue
+            query_images.append(query_image)
+    #query_images = [paired_sample[cumsum_idx[i+1] - j - 1]['image'] for i in range(n_ways)
+    #                for j in range(cnt_query[i])]
     # query_images_t = [paired_sample[cumsum_idx[i+1] - j - 1]['image_t'] for i in range(n_ways) for j in range(cnt_query[i])]
+
+    query_labels = []
     if coco:
-        query_labels = [paired_sample[cumsum_idx[i+1] - j - 1]['label'][class_ids[i]]
-                        for i in range(n_ways) for j in range(cnt_query[i])]
+        for i in range(n_ways):
+            for j in range(cnt_query[i]):
+                query_label_index = cumsum_idx[i+1] - j - 1
+                query_label_sample = paired_sample[query_label_index]
+                query_label = query_label_sample['label']
+                class_id = class_ids[i]
+                query_label_i = query_label[class_id]
+                query_labels.append(query_label_i)
+        # query_labels = [paired_sample[cumsum_idx[i+1] - j - 1]['label'][class_ids[i]]
+        #                 for i in range(n_ways) for j in range(cnt_query[i])]
     else:
-        query_labels = [paired_sample[cumsum_idx[i+1] - j - 1]['label'] for i in range(n_ways)
-                        for j in range(cnt_query[i])]
+        for i in range(n_ways):
+            for j in range(cnt_query[i]):
+                try:
+                    query_label_index = cumsum_idx[i+1] - j - 1
+                    query_label_sample = paired_sample[query_label_index]
+                    query_label = query_label_sample['label']
+                    query_labels.append(query_label)
+                except TypeError:
+                    continue
+        # query_labels = [paired_sample[cumsum_idx[i+1] - j - 1]['label'] for i in range(n_ways)
+        #                for j in range(cnt_query[i])]
     query_cls_idx = [sorted([0,] + [class_ids.index(x) + 1
                                     for x in set(np.unique(query_label)) & set(class_ids)])
                      for query_label in query_labels]
 
 
     ###### Generate support image masks ######
-    support_mask = [[getMask(support_labels[way][shot], support_scribbles[way][shot],
-                             class_ids[way], class_ids)
-                     for shot in range(n_shots)] for way in range(n_ways)]
+    support_mask = []
+    for way in range(n_ways):
+        support_mask_entry = []
+        for shot in range(n_shots):
+            try:
+                support_mask_entry.append(getMask(support_labels[way][shot], support_scribbles[way][shot], class_ids[way], class_ids))
+            except IndexError:
+                continue
+        support_mask.append(support_mask_entry)
+    # support_mask = [[getMask(support_labels[way][shot], support_scribbles[way][shot], class_ids[way], class_ids) for shot in range(n_shots)] for way in range(n_ways)]
 
 
     ###### Generate query label (class indices in one episode, i.e. the ground truth)######
@@ -145,7 +212,10 @@ def fewShot(paired_sample, n_ways, n_shots, cnt_query, dataset='VOC', coco=False
     for i, query_label_tmp in enumerate(query_labels_tmp):
         query_label_tmp[query_labels[i] == 255] = 255
         for j in range(n_ways):
-            query_label_tmp[query_labels[i] == class_ids[j]] = j + 1
+            try:
+                query_label_tmp[query_labels[i] == class_ids[j]] = j + 1
+            except IndexError:
+                continue
 
     ###### Generate query mask for each semantic class (including BG) ######
     # BG class
@@ -299,8 +369,6 @@ def hpa_fewshot(base_dir, grayscale_dir, rgb_dir, split, transforms, to_tensor, 
     # Load image ids for each class
     sub_ids = hpa.get_sub_ids()
     labels = hpa.get_labels()
-    # print('sub_ids', sub_ids) # TODO: delete me
-    # print('labels', labels) # TODO: delete me
 
     # Create sub-datasets and add class_id attribute
     # subsets = hpa.subsets(sub_ids)

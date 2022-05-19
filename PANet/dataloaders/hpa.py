@@ -94,6 +94,10 @@ class HPA(BaseDataset):
         if self.transforms is not None:
             sample = self.transforms(sample)
 
+        # TODO: remove workaround
+        if sample is None:
+            return
+
         # # Save the original image (without normalization)
         # image_t = torch.from_numpy(np.array(sample['image']).transpose(2, 0, 1))
 

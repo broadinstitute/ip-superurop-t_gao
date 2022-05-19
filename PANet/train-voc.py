@@ -14,7 +14,7 @@ from models.fewshot import FewShotSeg
 from dataloaders.customized import hpa_fewshot, voc_fewshot, coco_fewshot
 from dataloaders.transforms import RandomMirror, Resize, ToTensorNormalize
 from util.utils import set_seed, CLASS_LABELS
-from config import ex, run
+from config_voc import ex, run
 
 from keras.models import load_model
 
@@ -63,6 +63,7 @@ def main(_run, _config, _log):
 
     _log.info('###### Load data ######')
     data_name = _config['dataset']
+    print('data_name', data_name)
     _log.info('data_name is', data_name) # TODO: deleteme
     if data_name == 'VOC':
         make_data = voc_fewshot
@@ -95,6 +96,7 @@ def main(_run, _config, _log):
     drop_last = True
 
     if data_name == 'HPA':
+        print('data_name', data_name)
         _log.info('data_name is', data_name) # TODO: deleteme
         dataset, labels = make_data(
             base_dir=base_dir, # _config['path'][data_name]['data_dir'],
@@ -109,6 +111,7 @@ def main(_run, _config, _log):
             n_queries=n_queries # _config['task']['n_queries']
         )
     else:
+        print('data_name', data_name)
         _log.info('data_name is', data_name) # TODO: deleteme
         dataset = make_data(
             base_dir=base_dir, # _config['path'][data_name]['data_dir'],
@@ -129,7 +132,6 @@ def main(_run, _config, _log):
         pin_memory=True,
         drop_last=True
     )
-    for i_iter, sample_batched in enumerate(trainloader):
 
     _log.info('###### Set optimizer ######')
     optimizer = torch.optim.SGD(model.parameters(), **_config['optim'])
@@ -201,6 +203,7 @@ def main(_run, _config, _log):
         if (i_iter + 1) % _config['print_interval'] == 0:
             loss = log_loss['loss'] / (i_iter + 1)
             align_loss = log_loss['align_loss'] / (i_iter + 1)
+            print(f'step {i_iter+1}: loss: {loss}, align_loss: {align_loss}')
             run['train/loss'].log(loss)
             run['train/align_loss'].log(align_loss)
 
