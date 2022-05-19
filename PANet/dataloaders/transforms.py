@@ -15,6 +15,9 @@ class RandomMirror(object):
     Randomly filp the images/masks horizontally
     """
     def __call__(self, sample):
+        # TODO: remove workaround
+        if sample is None:
+            return
         img, label = sample['image'], sample['label']
         inst, scribble = sample['inst'], sample['scribble']
         if random.random() < 0.5:
@@ -44,22 +47,30 @@ class Resize(object):
         self.size = size
 
     def __call__(self, sample):
+        # TODO: remove workaround
+        if sample is None:
+            return
+
         img, label = sample['image'], sample['label']
         inst, scribble = sample['inst'], sample['scribble']
-        img = tr_F.resize(img, self.size)
-        if isinstance(label, dict):
-            label = {catId: tr_F.resize(x, self.size, interpolation=Image.NEAREST)
-                     for catId, x in label.items()}
-        else:
-            label = tr_F.resize(label, self.size, interpolation=Image.NEAREST)
-        inst = tr_F.resize(inst, self.size, interpolation=Image.NEAREST)
-        scribble = tr_F.resize(scribble, self.size, interpolation=Image.ANTIALIAS)
-
-        sample['image'] = img
-        sample['label'] = label
-        sample['inst'] = inst
-        sample['scribble'] = scribble
-        return sample
+        # TODO: remove try-catch wrapper (temp workaround)
+        try:
+            img = tr_F.resize(img, self.size)
+            if isinstance(label, dict):
+                label = {catId: tr_F.resize(x, self.size, interpolation=Image.NEAREST)
+                         for catId, x in label.items()}
+            else:
+                label = tr_F.resize(label, self.size, interpolation=Image.NEAREST)
+            inst = tr_F.resize(inst, self.size, interpolation=Image.NEAREST)
+            scribble = tr_F.resize(scribble, self.size, interpolation=Image.ANTIALIAS)
+            
+            sample['image'] = img
+            sample['label'] = label
+            sample['inst'] = inst
+            sample['scribble'] = scribble
+            return sample
+        except ValueError:
+            pass
 
 class DilateScribble(object):
     """
@@ -72,6 +83,9 @@ class DilateScribble(object):
         self.size = size
 
     def __call__(self, sample):
+        # TODO: remove workaround
+        if sample is None:
+            return
         scribble = sample['scribble']
         dilated_scribble = Image.fromarray(
             ndimage.minimum_filter(np.array(scribble), size=self.size))
@@ -86,6 +100,9 @@ class ToTensorNormalize(object):
     Scale images' pixel values to [0-1] and normalize with predefined statistics
     """
     def __call__(self, sample):
+        # TODO: remove workaround
+        if sample is None:
+            return
         img, label = sample['image'], sample['label']
         inst, scribble = sample['inst'], sample['scribble']
         img = tr_F.to_tensor(img)
