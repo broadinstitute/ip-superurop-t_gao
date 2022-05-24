@@ -4,29 +4,9 @@
 
 ## Original PANet
 
-1. Follow instructions from original PANet paper repo, reproduced below.
+1. Follow instructions from original PANet paper repo (**Data Preparation for VOC Dataset** and **Usage**, reproduced below) to prepare the VOC Dataset.
 2. Zip and transfer `VOCdevkit` and `pretrained_model.zip` to `.` (`superurop/PANet/`).
-3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet.sub`.
-
-## HPA
-
-1. Run `generate_png_from_tiff.py` locally.
-2. Zip and transfer `Greyscale_Images_png`, `PbMgNr_png` (or whatever other RGB versions of the images are being used), and `pretrained_model.zip` to `.` (`superurop/PANet/`).
-3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet.sub`.
-
-# PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment (README adapted from [original repo by Wang et al.](https://github.com/kaixin96/PANet)
-
-This repo contains code for our ICCV 2019 paper [PANet: Few-Shot Image Semantic Segmentation with Prototype Alignment](https://arxiv.org/abs/1908.06391).
-
-### Dependencies
-
-* Python 3.6 +
-* PyTorch 1.0.1
-* torchvision 0.2.1
-* NumPy, SciPy, PIL
-* pycocotools
-* sacred 0.7.5
-* tqdm 4.32.2
+3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet-voc.sub`.
 
 ### Data Preparation for VOC Dataset
 
@@ -35,7 +15,6 @@ This repo contains code for our ICCV 2019 paper [PANet: Few-Shot Image Semantic 
 1. Download `SegmentationClassAug`, `SegmentationObjectAug`, `ScribbleAugAuto` from [here](https://drive.google.com/drive/folders/1N00R9m9qe2rKZChZ8N7Hib_HR2HGtXHp?usp=sharing) and put them under `VOCdevkit/VOC2012/`.
 
 2. Download `Segmentation` from [here](https://drive.google.com/drive/folders/1N00R9m9qe2rKZChZ8N7Hib_HR2HGtXHp?usp=sharing) and use it to replace `VOCdevkit/VOC2012/ImageSets/Segmentation`.
-
 
 ### Usage
 
@@ -54,3 +33,9 @@ month = {October},
 year = {2019}
 }
 ```
+
+## HPA
+
+1. Move grayscale annotation masks (`Greyscale_Images`) and RGB images (e.g,. `PbMgNr`). Run `generate_png_from_tiff.py` and `generate_jpg_from_tiff.py` locally.
+2. Zip and transfer `Greyscale_Images_png`, `PbMgNr_jpg` (or whatever other RGB versions of the images are being used), and `pretrained_model.zip` to `.` (`superurop/PANet/`).
+3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet.sub`.
