@@ -4,13 +4,29 @@
 
 ### High-level goal
 
-Adapt existing few-shot learning architectures such as [PANet](https://arxiv.org/abs/1908.06391) to biological cell images from sources such as the [Human Protein Atlas](https://www.proteinatlas.org/humanproteome/pathology). In terms of implementation, this might mean using a CNN backbone pre-trained on biological cell images.
+Adapt existing few-shot learning architectures such as [PANet](https://arxiv.org/abs/1908.06391) to biological cell images from sources such as the [Human Protein Atlas (HPA)](https://www.proteinatlas.org/humanproteome/pathology). In terms of implementation, this might mean using a CNN backbone pre-trained on biological cell images.
 
 ### Current progress
 
 Some work has been done investigating the use of a ResNet architecture to replace the default PANet backbone. More recent work has focused on adapting the vanilla PANet architecture to accept an original image dataset from the Human Protein Atlas.
 
-> For more information, see https://github.com/broadinstitute/ip-superurop-t_gao/discussions/11
+#### Tools
+
+The dataset used is generated from HPA images. The directory, `2021_10_06_HumanProteinAtlas_CiminiLab_TeresaGao`, may be accessed by connecting to the server `smb://hydrogen/imaging_analysis` via the [Broad Institute VPN](vpn.broadinstitute.org). In this directory are the JPG images as originally downloaded from HPA, grayscale masks, and color rotations (e.g., an image with blue nuclei, red microtubules, and green actin filaments recolored to have green nuclei, blue microtubules, and red actin filaments to counteract any possible unwanted effect of color on model training).
+
+Training jobs have been run on free GPU resources provided by [CHTC](https://chtc.cs.wisc.edu). Use of CHTC computing is not required, though the repository already contains the necessary `.sub` and related files to run these jobs on the server. To run training jobs locally, you will need to manually set up the Docker Hub containers [teresahgao/superurop-grayscale-cnn](https://hub.docker.com/repository/docker/teresahgao/superurop-grayscale-cnn) and [teresahgao/superurop-panet](https://hub.docker.com/repository/docker/teresahgao/superurop-panet).
+
+#### CNN backbone
+
+Instructions for setting up and running the CNN locally are included in `CNN-backbone/README.md`.
+
+A CNN backbone was initially implementing as an AlexNet. The AlexNet overfit as expected, with about 0.7 accuracy, when presented with a very small amount of data (about 6 images per class. However, an inexplicable plateauing accuracy around 0.4 was observed when the number of images per class was increased, even when the training images used was increased.
+
+Due to this performance plateau, as well as the relative age of AlexNet, ResNet was next considered. Debugging this network was also time-consuming; for the sake of project progress, because of the amount of time already spent on AlexNet was nontrivial, it was decided to switch focus to investigating adaptations to PANet and double back to the issue of the CNN backbone should it become necessary to improve PANet performance.
+
+#### PANet adaptation
+
+See https://github.com/broadinstitute/ip-superurop-t_gao/discussions/11.
 
 
 ## Detailed motivation
