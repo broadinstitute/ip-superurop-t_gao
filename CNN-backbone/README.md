@@ -13,7 +13,7 @@
 
 # running on CHTC
 
-*See also: [CHTC guidebook](https://docs.google.com/document/d/1arRuX7-QuKWpS1xej4o_pZevHEmNcbl7WsQGi13qI8Q/edit#)*
+> For instructions on getting started with CHTC, see this unofficial [CHTC guidebook](https://docs.google.com/document/d/1arRuX7-QuKWpS1xej4o_pZevHEmNcbl7WsQGi13qI8Q/edit#)
 
 0. Connect to CHTC by running `ssh <your-chtc-username>@submit1.chtc.wisc.edu` on your local terminal.
 

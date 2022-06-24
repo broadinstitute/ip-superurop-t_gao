@@ -24,9 +24,13 @@ A CNN backbone was initially implementing as an AlexNet. The AlexNet overfit as 
 
 Due to this performance plateau, as well as the relative age of AlexNet, ResNet was next considered. Debugging this network was also time-consuming; for the sake of project progress, because of the amount of time already spent on AlexNet was nontrivial, it was decided to switch focus to investigating adaptations to PANet and double back to the issue of the CNN backbone should it become necessary to improve PANet performance.
 
+See `CNN-backbone/README.md` for more information.
+
 #### PANet adaptation
 
-See https://github.com/broadinstitute/ip-superurop-t_gao/discussions/11.
+Thus far, the original results from the [PANet paper](https://arxiv.org/abs/1908.06391) have been successfully replicated via the [official repo](https://github.com/kaixin96/PANet). The work that remains
+
+See https://github.com/broadinstitute/ip-superurop-t_gao/discussions/11 and `PANet/README.md` for more information.
 
 
 ## Detailed motivation

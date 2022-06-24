@@ -2,7 +2,11 @@
 
 0. Create `.txt` file called `neptune-api-token.txt` whose contents are your API token for Neptune.ai.
 
+> Note: if you are not running on CHTC, then you can permanently configure the Neptune API token using a command line call.
+
 ## Original PANet
+
+The following are instructions to replicate the published results from the [original PANet paper](https://arxiv.org/abs/1908.06391) via the [official code repo](https://github.com/kaixin96/PANet). The dataset used is VOCdevkit, and the backbone used is a pretrained VGG16.
 
 1. Follow instructions from original PANet paper repo (**Data Preparation for VOC Dataset** and **Usage**, reproduced below) to prepare the VOC Dataset.
 2. Zip and transfer `VOCdevkit` and `pretrained_model.zip` to `.` (`superurop/PANet/`).
@@ -22,8 +26,7 @@
 
 2. Change configuration via `config.py`, then train the model using `python train.py` or test the model using `python test.py`. You can use `sacred` features, e.g. `python train.py with gpu_id=2`.
 
-### Citation
-Please consider citing our paper if the project helps your research. BibTeX reference is as follows.
+### Citation of original authors
 ```
 @InProceedings{Wang_2019_ICCV,
 author = {Wang, Kaixin and Liew, Jun Hao and Zou, Yingtian and Zhou, Daquan and Feng, Jiashi},
@@ -35,6 +38,8 @@ year = {2019}
 ```
 
 ## HPA
+
+The current task is adapting the PANet for the HPA dataset, still with the same default VGG16 backbone. While a successful adaptation has not yet been achieved, the details of the debugging process so far can be found at https://github.com/broadinstitute/ip-superurop-t_gao/discussions/11.
 
 1. Move grayscale annotation masks (`Greyscale_Images`) and RGB images (e.g,. `PbMgNr`). Run `generate_png_from_tiff.py` and `generate_jpg_from_tiff.py` locally.
 2. Zip and transfer `Greyscale_Images_png`, `PbMgNr_jpg` (or whatever other RGB versions of the images are being used), and `pretrained_model.zip` to `.` (`superurop/PANet/`).
