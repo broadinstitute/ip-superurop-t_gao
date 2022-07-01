@@ -1,4 +1,14 @@
-# running locally
+# About
+
+This subdirectory implements a CNN for image classification trained on images from the [Human Protein Atlas (HPA)](https://www.proteinatlas.org). In theory, the CNN impmlemented here is used to replace the VGG-16 CNN backbone currently used by ResNet. As of now, the CNN used is a basic AlexNet, with performance as described on the [main page README](../README.md); code for a WIP implementation of ResNet is available at [this draft pull request](https://github.com/broadinstitute/ip-superurop-t_gao/pull/7).
+
+
+
+# Setup
+
+This part of the project uses [this Docker Hub repo](https://hub.docker.com/repository/docker/teresahgao/superurop-grayscale-cnn).
+
+## Running locally
 
 1. Navigate to `repos/grayscale-CNN`. If `generate_png_from_tiff.py` has never been run, then run `python3 generate_png_from_tiff.py`.
 
@@ -11,9 +21,9 @@
 5. To copy an output file from Docker container to host machine, run `docker cp <containerId>:/file/path/within/container /host/path/target`.
 
 
-# running on CHTC
+## Running on CHTC
 
-> For instructions on getting started with CHTC, see this unofficial [CHTC guidebook](https://docs.google.com/document/d/1arRuX7-QuKWpS1xej4o_pZevHEmNcbl7WsQGi13qI8Q/edit#)
+> For instructions on getting started with CHTC, see [../CHTC_guidebook.md](../CHTC_guidebook.md).
 
 0. Connect to CHTC by running `ssh <your-chtc-username>@submit1.chtc.wisc.edu` on your local terminal.
 
@@ -23,6 +33,6 @@
 
 3. Create the outputs directory by running `mkdir outputs`.
 
-4. Run `condor_submit alexnet.sub`.
+4. Run `condor_submit run.sub`.
 
 5. To copy an output file from CHTC to host machine, run `scp <yourchtcusername>@submit1.chtc.wisc.edu:path/to/data local/destination/path/to/data`. To transfer directories, use the recursive tag `-r`.

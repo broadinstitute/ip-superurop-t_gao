@@ -4,7 +4,7 @@
 
 This is a general guide for running jobs with the Center for High Throughput Computing (CHTC). The setup steps will need to be completed for every new repository or project you create but not for every job.
 
-See also: HTCondor Users’ Manual, HTCondor User Tutorial
+> See also: HTCondor Users’ Manual, HTCondor User Tutorial
 
 ## 0. registering for CHTC
 
@@ -87,4 +87,4 @@ Besides condor_submit, there are several other HTCondor commands you can use:
 - condor_release your-chtc-username: releases all jobs you own that may be on hold. Occasionally, jobs will become placed on hold if there are errors. Try condor_release and if that doesn’t work, run condor_q -analyze your-job-id to try to diagnose why.
 - condor_rm your-job-id: removes your job from the queue
 
-See also: Managing a Job — HTCondor Manual 9.3.0 documentation
+> See also: Managing a Job — HTCondor Manual 9.3.0 documentation
