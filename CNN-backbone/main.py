@@ -11,7 +11,7 @@ from itertools import islice, cycle
 from neptune.new.integrations.tensorflow_keras import NeptuneCallback
 from neptune.new.types import File
 from tensorflow import nn, data
-from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses, utils
+from tensorflow.keras import callbacks, datasets, layers, models, preprocessing, losses, utils, applications
 
 AUTOTUNE = data.AUTOTUNE
 
@@ -33,12 +33,6 @@ epoch_count = 100
 verbose = True
 num_classes = len(next(os.walk(img_dir))[1])
 random.seed(seed)
-# datagen = preprocessing.image.ImageDataGenerator(
-#     validation_split=validation_split,
-#     horizontal_flip=True,
-#     vertical_flip=True,
-#     rotation_range=20
-# )
 
 # log hyperparameters to Neptune.ai
 parameters = {
@@ -73,50 +67,11 @@ if __name__ == '__main__':
         batch_size=batch_size
     ).cache().prefetch(buffer_size=AUTOTUNE)
 
-    # print(train_ds.class_names)
-
-
-
-    ### BUILD ALEXNET CNN ###
-
-    alexnet = models.Sequential()
-    alexnet.add(layers.Conv2D(96, 11, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Lambda(nn.local_response_normalization))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.MaxPooling2D(3, strides=2))
-    alexnet.add(layers.Conv2D(256, 5, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Lambda(nn.local_response_normalization))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.MaxPooling2D(3, strides=2))
-    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Conv2D(384, 3, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Conv2D(256, 3, strides=4, padding='same', kernel_regularizer='l2'))
-    alexnet.add(layers.Activation('relu'))
-    alexnet.add(layers.Flatten())
-    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(4096, activation='relu', kernel_regularizer='l2'))
-    alexnet.add(layers.Dropout(0.5))
-    alexnet.add(layers.Dense(num_classes, activation='softmax'))
-    alexnet.compile(
-        optimizer='adam',
-        loss=losses.SparseCategoricalCrossentropy(), # (from_logits=True),
-        metrics=['accuracy']
-    )
-
 
 
     ### CREATE CALLBACKS TO SAVE MODEL ###
 
     checkpoint_dir = "./"
-    # if not os.path.exists(checkpoint_dir):
-    #     os.makedirs(checkpoint_dir)
-    #     if verbose:
-    #         print('created checkpoint_dir', checkpoint_dir)
     cp_callback = callbacks.ModelCheckpoint(
         filepath=checkpoint_dir+ '_checkpoint_epoch-{epoch:0>3d}_loss-{val_loss:.2f}.hdf5',
         monitor='val_loss',
@@ -134,9 +89,10 @@ if __name__ == '__main__':
 
 
 
-    ### TRAIN MODEL ###
-
-    history = alexnet.fit(
+    ### BUILD AND TRAIN MODEL ###
+    model = applications.resnet50.ResNet50(classes=num_classes)
+    run['model/saved_model'] = model.summary()
+    history = model.fit(
         train_ds,
         validation_data=validation_ds,
         epochs=epoch_count,
@@ -144,7 +100,6 @@ if __name__ == '__main__':
     ).history
 
     # upload model files to Neptune
-    run['model/saved_model'].upload_files('*.hdf5')
     run['model/graph'].upload_files('*.png')
 
     # plot loss and accuracy
