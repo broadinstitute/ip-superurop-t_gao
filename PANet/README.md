@@ -55,3 +55,28 @@ The current task is adapting the PANet for the HPA dataset, still with the same 
 1. Move grayscale annotation masks (`Greyscale_Images`) and RGB images (e.g,. `PbMgNr`). Run `generate_png_from_tiff.py` and `generate_jpg_from_tiff.py` locally.
 2. Zip and transfer `Greyscale_Images_png`, `PbMgNr_jpg` (or whatever other RGB versions of the images are being used), and `pretrained_model.zip` to `.` (`superurop/PANet/`).
 3. Create output directory `outputs/` by running `mkdir outputs/` and submit the job to run using `condor_submit panet.sub`.
+
+
+# Making Changes
+
+## CHTC files
+
+Each CHTC job requires a `.sub` file for submission to the server. This `.sub` file transfers the specified input files to the server and runs the `.sh` file, which in turn runs the training/testing `.py` file.
+
+For more information, see [`../CHTC_guidebook.md`](../CHTC_guidebook.md).
+
+### `config` files
+
+The default `config` file, `config.py`, runs PANet with the HPA dataset.
+
+The alternate `config` file, `config_voc.py`, runs PANet with the VOC dataset.
+
+The correct `config` file is loaded by default when submitting `panet.sub` versus `panet-voc.sub`, respectively.
+
+## `train.py`
+
+`train.py` loads the dataset from `dataloaders/` and the fewshot model from `models/`.
+
+The dataloader for the VOC dataset, implemented as the method `voc_fewshot()` in `dataloaders/customized.py`, should work successfully.
+
+Debugging efforts are ongoing for the dataloader for the HPA dataset, implemented in two parts: first as transforms are applied in `dataloaders/hpa.py` and then within the method `hpa_fewshot()` in `dataloaders/customized.py` to create subdatasets.

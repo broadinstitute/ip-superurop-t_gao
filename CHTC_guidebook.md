@@ -18,7 +18,7 @@ Some of the setup steps below require connecting to CHTC. To connect to CHTC, ru
 
 ### a. transferring code or data files
 
-First, transfer any code or data files you’ll need to CHTC. Without code, you can’t run a job; without data, a job won’t have anything to run on!
+First, transfer any code or data files you’ll need to CHTC. Without code, you can’t run a job; without data, a job won’t have anything to run on! If transferring datasets, ensure that they are zipped to reduce the size so as not to overwhelm the CHTC server.
 
 #### i. GitHub for code files
 
