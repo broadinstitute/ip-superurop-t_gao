@@ -2,7 +2,7 @@
 
 This subdirectory fetches, parses, and downloads biological cell image data from the [Human Protein Atlas](https://www.proteinatlas.org). This project uses the [pathology.tsv](https://www.proteinatlas.org/about/download) dataset.
 
-Though this subdirectory may be used to obtain data from HPA, a pre-fetched dataset is available at a directory on the Broad Institute server. The directory, `2021_10_06_HumanProteinAtlas_CiminiLab_TeresaGao`, may be accessed by connecting to the server `smb://hydrogen/imaging_analysis` via the [Broad Institute VPN](vpn.broadinstitute.org). In this directory are the JPG images as originally downloaded from HPA, grayscale masks, and color rotations (e.g., an image with blue nuclei, red microtubules, and green actin filaments recolored to have green nuclei, blue microtubules, and red actin filaments to counteract any possible unwanted effect of color on model training).
+Though this subdirectory may be used to obtain data from HPA, **an existing pre-generated dataset is available at a directory on the Broad Institute server**. The directory, `2021_10_06_HumanProteinAtlas_CiminiLab_TeresaGao`, may be accessed by connecting to the server `smb://hydrogen/imaging_analysis` via the [Broad Institute VPN](vpn.broadinstitute.org). In this directory are the JPG images as originally downloaded from HPA, grayscale masks, and color rotations (e.g., an image with blue nuclei, red microtubules, and green actin filaments recolored to have green nuclei, blue microtubules, and red actin filaments to counteract any possible unwanted effect of color on model training).
 
 # Usage
 

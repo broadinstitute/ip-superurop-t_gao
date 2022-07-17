@@ -2,6 +2,8 @@
 
 This subdirectory utilizes the official implementation of [PANet](https://github.com/kaixin96/PANet) as part of explorations of existing few-shot learning architectures for the task of biological cell image segmentation. The immediate ongoing goal is to adapt PANet to accept the novel HPA dataset from this project; subsequent steps may include experimentation with various CNN backbones (to replace the default VGG-16) and/or investigating other few-shot architectures.
 
+For detailed information on current status, please see https://github.com/broadinstitute/ip-superurop-t_gao/discussions/11 and https://github.com/broadinstitute/ip-superurop-t_gao/issues/13.
+
 
 # Setup
 
@@ -11,9 +13,7 @@ This part of the project uses [this Docker Hub repo](https://hub.docker.com/repo
 
 Training jobs have been run on free GPU resources provided by [CHTC](https://chtc.cs.wisc.edu). Use of CHTC computing is not required, though the repository already contains the necessary `.sub` and related files to run these jobs on the server. To run training jobs locally, you will need to manually set up the Docker Hub containers [teresahgao/superurop-grayscale-cnn](https://hub.docker.com/repository/docker/teresahgao/superurop-grayscale-cnn) and [teresahgao/superurop-panet](https://hub.docker.com/repository/docker/teresahgao/superurop-panet).
 
-0. Create `.txt` file called `neptune-api-token.txt` whose contents are your API token for Neptune.ai.
-
-> Note: if you are not running on CHTC, then you can permanently configure the Neptune API token using a command line call.
+0. Create `.txt` file called `neptune-api-token.txt` whose contents are your API token for Neptune.ai. Note that if you are not running on CHTC, then you can permanently configure the Neptune API token using a command line call.
 
 ### Original PANet
 
